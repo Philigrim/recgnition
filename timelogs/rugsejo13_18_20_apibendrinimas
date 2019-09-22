@@ -1,0 +1,8 @@
+Rugsėjo 13, 18, 20
+
+Rašėme projekto viziją, preliminarią analizę;
+Ieškojome pavyzdžių internete, iš kurių galėtume pasisemti idėjų, kokias technologijas naudoti;
+Rašėme projekto kontraktą;
+Įsidiegėme į savo kompiuterius bibliotekas, programas, kurios mums reikalingos įgyvendinti objekto atpažinimo funkcionalumą;
+Rinkome duomenis, reikalingus pasibandyti padaryti paprastą objekto atpažinimą.
+Įgyvendinome paprastą (1 ženklo) atpažinimą iš video/nuotraukos/internetinės vaizdo kameros srauto, naudojantis konvoliuciniu neuroniniu tinklu, Tensorflow programų karkasu.
