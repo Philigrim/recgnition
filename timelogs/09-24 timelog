@@ -2,3 +2,12 @@ N.J.12:38 renku ženklų nuotraukas, sumažinu jų dydį bei rezoliuciją
 N.J.14:10 baigiau rinkti vieno ženklo nuotraukas(100), siunčiuos Augmentor package pythonui kad padaugintų nuotraukų kiekį jas šiek tiek pakeisdamas
 N.J.14:30 neišeina paleist Augmentor package ieškau informacijos kaip tą padaryti
 N.J.14:43 pavyko pasileisti, surinkau daug duomenų ženklo (grečio ribojimo 70km/h) atpažinimui ir belieka tik ištreniruoti
+
+V.D. 12:35 Ieškojau savo tensorflow, cuda, cudnn versijų. Tikrinu ar jos suderinamos
+V.D. 12:50 Išsiaiškinau, jog versijos suderinamos.
+V.D. 12:51 Bandau pasileist tensorflow ant grafinės plokštės.
+V.D. 13:00 Tensorflow ir toliau naudoja procesorių, o ne grafinę plokštę.Ieškau, kaip reikėtų perkelt sukurtą objektų aptikimo sistemą ant android įrenginio.
+V.D. 13:15 Radau straipsnį, kaip susikurtą sistemą perkelti į android įrenginį.
+V.D. 13:17 Bandau pasileist tensorflow object detection pavyzdį ant android studio.
+V.D. 13:32 Ieškau kaip pasileist emuliatoriu ant android studio.
+V.D. 14:40 Pavyko susirašyti Pixel 2 telefono emuliatorių. Panaudojau jį tensorflow object detection pavyzdžiui išbandyti.
