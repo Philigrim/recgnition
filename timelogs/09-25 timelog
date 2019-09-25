@@ -2,3 +2,8 @@ N.J.13:01 atsisiunčiu pbl latex šabloną bei pradedu jį konfiguruoti pagal m�
 N.J.14:02 rašau mūsų projekto aprašą
 
 R.V.13:00-14:30 Įsirašinėjau bibliotekas ir sdk reikalingas projekto įgyvendinimui android studio aplinkoje.
+
+V.D. 12:54 Ieškau informacijos, kaip perkelt savo ištreniruotą objektų aptikimo modelį (sistemą) į android studio projektą.
+V.D. 15:09 Parsisiunčiau ir redagavau android įrenginiui pritaikytą objektų aptikimo sistemos pavyzdį, kad aptiktų objektus pagal mano sukurtą modelį, tačiau programa neveikė. Ieškau sprendimų.
+V.D. 15:15 Bandau pasileist objektų aptikimo sistemą. (Kompiuteryje)
+V.D. 15:28 Sistema nepasileidžia nei anacondos gpu, nei cpu versijoje. Problemos įveikti nepavyko, greičiausiai susigadino failai, todėl teks persirašyt tensorflow.
