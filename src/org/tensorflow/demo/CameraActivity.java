@@ -20,6 +20,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.hardware.camera2.CameraAccessException;
@@ -38,7 +39,9 @@ import android.os.Trace;
 import android.util.Size;
 import android.view.KeyEvent;
 import android.view.Surface;
+import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.Toast;
 import java.nio.ByteBuffer;
 import org.tensorflow.demo.env.ImageUtils;
@@ -70,6 +73,8 @@ public abstract class CameraActivity extends Activity
   private Runnable postInferenceCallback;
   private Runnable imageConverter;
 
+  private Button buttonToMap;
+
   @Override
   protected void onCreate(final Bundle savedInstanceState) {
     LOGGER.d("onCreate " + this);
@@ -77,12 +82,24 @@ public abstract class CameraActivity extends Activity
     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
     setContentView(R.layout.activity_camera);
-
+    buttonToMap = findViewById(R.id.mapButton);
     if (hasPermission()) {
       setFragment();
     } else {
       requestPermission();
     }
+
+    buttonToMap.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        openMap();
+      }
+    });
+  }
+
+  private void openMap(){
+    Intent intent = new Intent(this, MapActivity.class);
+    startActivity(intent);
   }
 
   private byte[] lastPreviewFrame;
