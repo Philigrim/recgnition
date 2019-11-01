@@ -1,15 +1,23 @@
 package org.tensorflow.demo;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
+import android.location.Location;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.mapbox.android.core.location.LocationEngine;
+import com.mapbox.android.core.location.LocationEngineCallback;
+import com.mapbox.android.core.location.LocationEngineProvider;
+import com.mapbox.android.core.location.LocationEngineRequest;
+import com.mapbox.android.core.location.LocationEngineResult;
 import com.mapbox.android.core.permissions.PermissionsListener;
 import com.mapbox.android.core.permissions.PermissionsManager;
 import com.mapbox.geojson.Feature;
@@ -29,6 +37,7 @@ import com.mapbox.mapboxsdk.style.layers.PropertyFactory;
 import com.mapbox.mapboxsdk.style.layers.SymbolLayer;
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -53,15 +62,24 @@ public class MapActivity extends AppCompatActivity implements
     private static final String MARKER_IMAGE = "custom-marker";
 
     private PermissionsManager permissionsManager;
-    private MapboxMap mapboxMap;
+    public MapboxMap mapboxMap;
     private MapView mapView;
     private Button buttonToCamera;
     private Button buttonToAddSign;
+    private Location userLocation;
 
     private Random rand = new Random();
     private int index = 0;
 
     private Style myStyle;
+
+    // Variables needed to add the location engine
+    private LocationEngine locationEngine;
+    private long DEFAULT_INTERVAL_IN_MILLISECONDS = 1000L;
+    private long DEFAULT_MAX_WAIT_TIME = DEFAULT_INTERVAL_IN_MILLISECONDS * 5;
+    // Variables needed to listen to location updates
+    private MapActivityLocationCallback callback = new MapActivityLocationCallback(this);
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,12 +107,55 @@ public class MapActivity extends AppCompatActivity implements
         buttonToAddSign.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                float rand_float_lat = rand.nextFloat();
-                float rand_float_long = rand.nextFloat();
+                userLocation = callback.getLocation();
+                String direction = directionFacing(userLocation.getBearing());
 
-                addMarkers(myStyle, 25.279652f * rand_float_long, 54.687157f * rand_float_lat);
+                float latMultiplier = setLatMultiplier(direction);
+                float longMultiplier = setLongMultiplier(direction);
+
+                float userLat = (float)userLocation.getLatitude();
+                float userLong = (float)userLocation.getLongitude();
+
+                addMarkers(myStyle, userLong * longMultiplier, userLat * latMultiplier);
             }
         });
+    }
+
+    private String directionFacing(float bearing)
+    {
+        if(bearing > 315 || bearing > 0 && bearing < 45){
+            return "North";
+        }else if(bearing >= 45 && bearing < 135){
+            return "East";
+        }else if(bearing >= 135f && bearing < 225){
+            return "West";
+        }else{
+            return "South";
+        }
+    }
+
+    private float setLatMultiplier(String direction){
+        if(direction == "North"){
+            return 1.00001f;
+        }else if(direction == "East"){
+            return 0.999999f;
+        }else if(direction == "South"){
+            return 0.99999f;
+        }else{
+            return 1.000001f;
+        }
+    }
+
+    private float setLongMultiplier(String direction){
+        if(direction == "North"){
+            return 1.000001f;
+        }else if(direction == "East"){
+            return 1.00001f;
+        }else if(direction == "South"){
+            return 0.999999f;
+        }else{
+            return 0.99999f;
+        }
     }
 
     private void openCamera(){
@@ -151,12 +212,17 @@ public class MapActivity extends AppCompatActivity implements
     }
 
     public void addMarkersFromCamera(){
-        float rand_float_lat = rand.nextFloat();
-        float rand_float_long = rand.nextFloat();
+        float latMultiplier = 1.01f;
+        float longMultiplier = 1.001f;
+        float userLat = (float)userLocation.getLatitude();
+        float userLong = (float)userLocation.getLongitude();
 
-        addMarkers(myStyle, 25.279652f * rand_float_long, 54.687157f * rand_float_lat);
+        addMarkers(myStyle, userLong * longMultiplier, userLat * latMultiplier);
     }
 
+    /**
+     * Initialize the Maps SDK's LocationComponent
+     */
     @SuppressWarnings( {"MissingPermission"})
     private void enableLocationComponent(@NonNull Style loadedMapStyle) {
 // Check if permissions are enabled and if not request
@@ -165,9 +231,14 @@ public class MapActivity extends AppCompatActivity implements
 // Get an instance of the component
             LocationComponent locationComponent = mapboxMap.getLocationComponent();
 
-// Activate with options
-            locationComponent.activateLocationComponent(
-                    LocationComponentActivationOptions.builder(this, loadedMapStyle).build());
+// Set the LocationComponent activation options
+            LocationComponentActivationOptions locationComponentActivationOptions =
+                    LocationComponentActivationOptions.builder(this, loadedMapStyle)
+                            .useDefaultLocationEngine(false)
+                            .build();
+
+// Activate with the LocationComponentActivationOptions object
+            locationComponent.activateLocationComponent(locationComponentActivationOptions);
 
 // Enable to make component visible
             locationComponent.setLocationComponentEnabled(true);
@@ -178,11 +249,26 @@ public class MapActivity extends AppCompatActivity implements
 // Set the component's render mode
             locationComponent.setRenderMode(RenderMode.COMPASS);
 
-            System.out.println(locationComponent.getLastKnownLocation());
+            initLocationEngine();
         } else {
             permissionsManager = new PermissionsManager(this);
             permissionsManager.requestLocationPermissions(this);
         }
+    }
+
+    /**
+     * Set up the LocationEngine and the parameters for querying the device's location
+     */
+    @SuppressLint("MissingPermission")
+    private void initLocationEngine() {
+        locationEngine = LocationEngineProvider.getBestLocationEngine(this);
+
+        LocationEngineRequest request = new LocationEngineRequest.Builder(DEFAULT_INTERVAL_IN_MILLISECONDS)
+                .setPriority(LocationEngineRequest.PRIORITY_HIGH_ACCURACY)
+                .setMaxWaitTime(DEFAULT_MAX_WAIT_TIME).build();
+
+        locationEngine.requestLocationUpdates(request, callback, getMainLooper());
+        locationEngine.getLastLocation(callback);
     }
 
     @Override
@@ -198,12 +284,9 @@ public class MapActivity extends AppCompatActivity implements
     @Override
     public void onPermissionResult(boolean granted) {
         if (granted) {
-            mapboxMap.getStyle(new Style.OnStyleLoaded() {
-                @Override
-                public void onStyleLoaded(@NonNull Style style) {
-                    enableLocationComponent(style);
-                }
-            });
+            if (mapboxMap.getStyle() != null) {
+                enableLocationComponent(mapboxMap.getStyle());
+            }
         } else {
             Toast.makeText(this, R.string.user_location_permission_not_granted, Toast.LENGTH_LONG).show();
             finish();
@@ -244,6 +327,10 @@ public class MapActivity extends AppCompatActivity implements
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        // Prevent leaks
+        if (locationEngine != null) {
+            locationEngine.removeLocationUpdates(callback);
+        }
         mapView.onDestroy();
     }
 
