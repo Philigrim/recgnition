@@ -63,7 +63,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
   private static final int TF_OD_API_INPUT_SIZE = 300;
   private static final String TF_OD_API_MODEL_FILE =
-      "file:///android_asset/frozen_inference_graph_ssd.pb";
+      "file:///android_asset/frozen_inference_graph.pb";
   private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/labels_list.txt";
 
   // Configuration values for tiny-yolo-voc. Note that the graph is not included with TensorFlow and

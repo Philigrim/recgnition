@@ -32,6 +32,7 @@ public class RecognitionScoreView extends View implements ResultsView {
   private final float textSizePx;
   private final Paint fgPaint;
   private final Paint bgPaint;
+  private MapActivity mapActivity;
 
   public RecognitionScoreView(final Context context, final AttributeSet set) {
     super(context, set);
@@ -62,6 +63,7 @@ public class RecognitionScoreView extends View implements ResultsView {
     if (results != null) {
       for (final Recognition recog : results) {
         canvas.drawText(recog.getTitle() + ": " + recog.getConfidence(), x, y, fgPaint);
+        mapActivity.addMarkersFromCamera();
         y += fgPaint.getTextSize() * 1.5f;
       }
     }

@@ -150,6 +150,13 @@ public class MapActivity extends AppCompatActivity implements
         index++;
     }
 
+    public void addMarkersFromCamera(){
+        float rand_float_lat = rand.nextFloat();
+        float rand_float_long = rand.nextFloat();
+
+        addMarkers(myStyle, 25.279652f * rand_float_long, 54.687157f * rand_float_lat);
+    }
+
     @SuppressWarnings( {"MissingPermission"})
     private void enableLocationComponent(@NonNull Style loadedMapStyle) {
 // Check if permissions are enabled and if not request
