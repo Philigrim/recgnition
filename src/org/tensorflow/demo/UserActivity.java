@@ -14,8 +14,11 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.gson.JsonArray;
 
+
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.io.FileWriter;
 
 public class UserActivity extends AppCompatActivity {
 
@@ -39,6 +42,15 @@ public class UserActivity extends AppCompatActivity {
                     public void onResponse(JSONArray response){
                         Log.e("Rest response", response.toString());
                         myArray = response;
+                        try {
+                            FileWriter fileWriter = new FileWriter("json");
+                            fileWriter.write(myArray.toString());
+                            fileWriter.flush();
+                            fileWriter.close();
+                        }
+                        catch (Exception e){
+                            e.printStackTrace();
+                        }
                     }
                 },
                 new Response.ErrorListener(){
