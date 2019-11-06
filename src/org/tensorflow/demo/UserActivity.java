@@ -100,18 +100,7 @@ public class UserActivity extends AppCompatActivity {
                     public void onErrorResponse(VolleyError error){
                         Log.e("Rest Response", error.toString());
                     }
-                }
 
-
-                        }
-                    }
-                },
-                new Response.ErrorListener(){
-                    @Override
-                    public void onErrorResponse(VolleyError error){
-                        Log.e("Rest Response", error.toString());
-                    }
-                }
 
 
         );
