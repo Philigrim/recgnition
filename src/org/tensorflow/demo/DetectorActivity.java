@@ -2,7 +2,7 @@
  * Copyright 2016 The TensorFlow Authors. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+ * you may not use this file.json except in compliance with the License.
  * You may obtain a copy of the License at
  *
  *       http://www.apache.org/licenses/LICENSE-2.0
@@ -57,21 +57,21 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private static final String MB_INPUT_NAME = "ResizeBilinear";
   private static final String MB_OUTPUT_LOCATIONS_NAME = "output_locations/Reshape";
   private static final String MB_OUTPUT_SCORES_NAME = "output_scores/Reshape";
-  private static final String MB_MODEL_FILE = "file:///android_asset/multibox_model.pb";
+  private static final String MB_MODEL_FILE = "file.json:///android_asset/multibox_model.pb";
   private static final String MB_LOCATION_FILE =
-      "file:///android_asset/multibox_location_priors.txt";
+      "file.json:///android_asset/multibox_location_priors.txt";
 
   private static final int TF_OD_API_INPUT_SIZE = 300;
   private static final String TF_OD_API_MODEL_FILE =
-      "file:///android_asset/frozen_inference_graph.pb";
-  private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/labels_list.txt";
+      "file.json:///android_asset/frozen_inference_graph.pb";
+  private static final String TF_OD_API_LABELS_FILE = "file.json:///android_asset/labels_list.txt";
 
   // Configuration values for tiny-yolo-voc. Note that the graph is not included with TensorFlow and
   // must be manually placed in the assets/ directory by the user.
   // Graphs and models downloaded from http://pjreddie.com/darknet/yolo/ may be converted e.g. via
   // DarkFlow (https://github.com/thtrieu/darkflow). Sample command:
   // ./flow --model cfg/tiny-yolo-voc.cfg --load bin/tiny-yolo-voc.weights --savepb --verbalise
-  private static final String YOLO_MODEL_FILE = "file:///android_asset/graph-tiny-yolo-voc.pb";
+  private static final String YOLO_MODEL_FILE = "file.json:///android_asset/graph-tiny-yolo-voc.pb";
   private static final int YOLO_INPUT_SIZE = 416;
   private static final String YOLO_INPUT_NAME = "input";
   private static final String YOLO_OUTPUT_NAMES = "output";

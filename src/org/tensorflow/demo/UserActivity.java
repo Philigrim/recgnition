@@ -42,70 +42,29 @@ public class UserActivity extends AppCompatActivity {
                     public void onResponse(JSONArray response){
                         Log.e("Rest response", response.toString());
                         myArray = response;
-                        try {
-                            FileWriter fileWriter = new FileWriter("json");
-                            fileWriter.write(myArray.toString());
-                            fileWriter.flush();
-                            fileWriter.close();
                         }
-                        catch (Exception e){
-                            e.printStackTrace();
-                        }
-                    }
-                },
-                new Response.ErrorListener(){
-                    @Override
-                    public void onErrorResponse(VolleyError error){
-                        Log.e("Rest Response", error.toString());
-                    }
-                }
 
-                Request.Method.GET,
-                restURL,
-                null,
-                new Response.Listener<JSONArray>(){
+                        },
+
+                new Response.ErrorListener() {
                     @Override
-                    public void onResponse(JSONArray response){
-                        Log.e("Rest response", response.toString());
-                        myArray = response;
-                        try {
-                            FileWriter fileWriter = new FileWriter("json");
-                            fileWriter.write(myArray.toString());
-                            fileWriter.flush();
-                            fileWriter.close();
-                        }
-                        catch (Exception e){
-                            e.printStackTrace();
-                Request.Method.GET,
-                restURL,
-                null,
-                new Response.Listener<JSONArray>(){
-                    @Override
-                    public void onResponse(JSONArray response){
-                        Log.e("Rest response", response.toString());
-                        myArray = response;
-                        try {
-                            FileWriter fileWriter = new FileWriter("json");
-                            fileWriter.write(myArray.toString());
-                            fileWriter.flush();
-                            fileWriter.close();
-                        }
-                        catch (Exception e){
-                            e.printStackTrace();
-                        }
-                    }
-                },
-                new Response.ErrorListener(){
-                    @Override
-                    public void onErrorResponse(VolleyError error){
+                    public void onErrorResponse(VolleyError error) {
                         Log.e("Rest Response", error.toString());
                     }
 
 
-
-        );
-
+                });
         requestQueue.add(arrayRequest);
-        System.out.println(myArray);
+        System.out.println(myArray.toString());
+
+        try (   FileWriter fileWriter = new FileWriter("file.json", false)){
+
+            fileWriter.write(myArray.toString());
+            fileWriter.flush();
+
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

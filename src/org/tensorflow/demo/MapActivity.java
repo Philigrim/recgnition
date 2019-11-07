@@ -99,54 +99,13 @@ public class MapActivity extends AppCompatActivity implements
             @Override
             public void onClick(View view) {
                 userLocation = callback.getLocation();
-                String direction = directionFacing(userLocation.getBearing());
-
-                float latMultiplier = setLatMultiplier(direction);
-                float longMultiplier = setLongMultiplier(direction);
 
                 float userLat = (float)userLocation.getLatitude();
                 float userLong = (float)userLocation.getLongitude();
 
-                addMarkers(myStyle, userLong * longMultiplier, userLat * latMultiplier);
+                addMarkers(myStyle, userLong, userLat);
             }
         });
-    }
-
-    private String directionFacing(float bearing)
-    {
-        if(bearing > 315 || bearing > 0 && bearing < 45){
-            return "North";
-        }else if(bearing >= 45 && bearing < 135){
-            return "East";
-        }else if(bearing >= 135f && bearing < 225){
-            return "West";
-        }else{
-            return "South";
-        }
-    }
-
-    private float setLatMultiplier(String direction){
-        if(direction == "North"){
-            return 1.00001f;
-        }else if(direction == "East"){
-            return 0.999999f;
-        }else if(direction == "South"){
-            return 0.99999f;
-        }else{
-            return 1.000001f;
-        }
-    }
-
-    private float setLongMultiplier(String direction){
-        if(direction == "North"){
-            return 1.000001f;
-        }else if(direction == "East"){
-            return 1.00001f;
-        }else if(direction == "South"){
-            return 0.999999f;
-        }else{
-            return 0.99999f;
-        }
     }
 
     private void openCamera(){

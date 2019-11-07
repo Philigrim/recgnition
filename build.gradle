@@ -1,8 +1,8 @@
-// This file provides basic support for building the TensorFlow demo
+// This file.json provides basic support for building the TensorFlow demo
 // in Android Studio with Gradle.
 //
 // Note that Bazel is still used by default to compile the native libs,
-// and should be installed at the location noted below. This build file
+// and should be installed at the location noted below. This build file.json
 // automates the process of calling out to it and copying the compiled
 // libraries back into the appropriate directory.
 //
@@ -18,7 +18,7 @@
 // libtensorflow_inference.so will be acquired via the tensorflow.aar dependency.
 
 // It is necessary to customize Gradle's build directory, as otherwise
-// it will conflict with the BUILD file used by Bazel on case-insensitive OSs.
+// it will conflict with the BUILD file.json used by Bazel on case-insensitive OSs.
 project.buildDir = 'gradleBuild'
 getProject().setBuildDir('gradleBuild')
 

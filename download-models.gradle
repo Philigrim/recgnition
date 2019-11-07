@@ -43,7 +43,7 @@
 //        from zipTree(project.ext.TMP_DIR + '/' + localFile)
 //    }
 //
-//    into file(project.ext.ASSET_DIR)
+//    into file.json(project.ext.ASSET_DIR)
 //    fileMode  0644
 //    exclude '**/LICENSE'
 //

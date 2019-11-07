@@ -1,7 +1,7 @@
 /* Copyright 2016 The TensorFlow Authors. All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
+you may not use this file.json except in compliance with the License.
 You may obtain a copy of the License at
 
     http://www.apache.org/licenses/LICENSE-2.0
@@ -63,7 +63,7 @@ public class TensorFlowImageClassifier implements Classifier {
    *
    * @param assetManager The asset manager to be used to load assets.
    * @param modelFilename The filepath of the model GraphDef protocol buffer.
-   * @param labelFilename The filepath of label file for classes.
+   * @param labelFilename The filepath of label file.json for classes.
    * @param inputSize The input size. A square image of inputSize x inputSize is assumed.
    * @param imageMean The assumed mean of the image values.
    * @param imageStd The assumed std of the image values.
@@ -97,7 +97,7 @@ public class TensorFlowImageClassifier implements Classifier {
       }
       br.close();
     } catch (IOException e) {
-      throw new RuntimeException("Problem reading label file!" , e);
+      throw new RuntimeException("Problem reading label file.json!" , e);
     }
 
     c.inferenceInterface = new TensorFlowInferenceInterface(assetManager, modelFilename);

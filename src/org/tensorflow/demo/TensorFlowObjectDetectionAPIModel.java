@@ -1,7 +1,7 @@
 /* Copyright 2016 The TensorFlow Authors. All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
+you may not use this file.json except in compliance with the License.
 You may obtain a copy of the License at
 
     http://www.apache.org/licenses/LICENSE-2.0
@@ -66,7 +66,7 @@ public class TensorFlowObjectDetectionAPIModel implements Classifier {
    *
    * @param assetManager The asset manager to be used to load assets.
    * @param modelFilename The filepath of the model GraphDef protocol buffer.
-   * @param labelFilename The filepath of label file for classes.
+   * @param labelFilename The filepath of label file.json for classes.
    */
   public static Classifier create(
       final AssetManager assetManager,
