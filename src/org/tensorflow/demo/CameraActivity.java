@@ -43,13 +43,27 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.auth.api.signin.GoogleSignInResult;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.OptionalPendingResult;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+
 import java.nio.ByteBuffer;
 import org.tensorflow.demo.env.ImageUtils;
 import org.tensorflow.demo.env.Logger;
 import org.tensorflow.demo.R; // Explicit import needed for internal Google builds.
 
-public abstract class CameraActivity extends Activity
-    implements OnImageAvailableListener, Camera.PreviewCallback {
+public abstract class CameraActivity extends AppCompatActivity
+    implements OnImageAvailableListener, Camera.PreviewCallback, GoogleApiClient.OnConnectionFailedListener {
   private static final Logger LOGGER = new Logger();
 
   private static final int PERMISSIONS_REQUEST = 1;
@@ -74,6 +88,10 @@ public abstract class CameraActivity extends Activity
   private Runnable imageConverter;
 
   private Button buttonToMap;
+  Button buttonLogout;
+
+  private GoogleApiClient googleApiClient;
+  private GoogleSignInOptions gso;
 
   @Override
   protected void onCreate(final Bundle savedInstanceState) {
@@ -83,6 +101,8 @@ public abstract class CameraActivity extends Activity
 
     setContentView(R.layout.activity_camera);
     buttonToMap = findViewById(R.id.mapButton);
+    buttonLogout=(Button)findViewById(R.id.sign_out); //SIGN OUT BUTTON
+
     if (hasPermission()) {
       setFragment();
     } else {
@@ -95,7 +115,79 @@ public abstract class CameraActivity extends Activity
         openMap();
       }
     });
+
+    //toliau kodas susijes su sign out button
+
+    gso =  new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestEmail()
+            .build();
+
+    googleApiClient=new GoogleApiClient.Builder(this)
+            .enableAutoManage(this,this)
+            .addApi(Auth.GOOGLE_SIGN_IN_API,gso)
+            .build();
+
+
+    buttonLogout.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        Auth.GoogleSignInApi.signOut(googleApiClient).setResultCallback(
+                new ResultCallback<Status>() {
+                  @Override
+                  public void onResult(Status status) {
+                    if (status.isSuccess()){
+                      gotoSignInActivity();
+                    }else{
+                      Toast.makeText(getApplicationContext(),"Session not close",Toast.LENGTH_LONG).show();
+                    }
+                  }
+                });
+      }
+    });
   }
+
+  @Override
+  public synchronized void onStart() {
+    LOGGER.d("onStart " + this);
+    super.onStart();
+
+    // toliau kodas susijes su sign out
+
+    OptionalPendingResult<GoogleSignInResult> opr= Auth.GoogleSignInApi.silentSignIn(googleApiClient);
+    if(opr.isDone()){
+      GoogleSignInResult result=opr.get();
+      handleSignInResult(result);
+    }else{
+      opr.setResultCallback(new ResultCallback<GoogleSignInResult>() {
+        @Override
+        public void onResult(@NonNull GoogleSignInResult googleSignInResult) {
+          handleSignInResult(googleSignInResult);
+        }
+      });
+    }
+  }
+
+  private void handleSignInResult(GoogleSignInResult result){
+    if(result.isSuccess()) {
+      GoogleSignInAccount account = result.getSignInAccount();
+    }
+
+    else{
+      gotoSignInActivity();
+    }
+  }
+
+  private void gotoSignInActivity(){
+    Intent intent=new Intent(this,SignInActivity.class);
+    startActivity(intent);
+  }
+
+  @Override
+  public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
+  }
+
+  //kodo susijusio su sign out pabaiga
 
   private void openMap(){
     Intent intent = new Intent(this, MapActivity.class);
@@ -231,11 +323,6 @@ public abstract class CameraActivity extends Activity
     Trace.endSection();
   }
 
-  @Override
-  public synchronized void onStart() {
-    LOGGER.d("onStart " + this);
-    super.onStart();
-  }
 
   @Override
   public synchronized void onResume() {

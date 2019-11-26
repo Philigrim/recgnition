@@ -24,4 +24,7 @@
     <string name="addsign">addSign</string>
     <string name="camera">Camera</string>
     <string name="new_location">New lat: %1$s New longitude: %2$s</string>
+    <string name="web_client">426288028700-caudn69d2mjfa66k6a5h8nerq0sjahos.apps.googleusercontent.com</string>
+    <string name="com_auth0_client_id">rPO5OZsHrBYoXNYC1G5P6jRGHwwnYPHg</string>
+    <string name="com_auth0_domain">dev-vw11m1fa.eu.auth0.com</string>
 </resources>
