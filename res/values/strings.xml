@@ -20,7 +20,7 @@
     <string name="mapbox_access_token">sk.eyJ1IjoiYXJrZXMiLCJhIjoiY2syMXJwbDZlMDRyejNucW9tdjd5ZGxkOCJ9.2ogWEgKnygMCKDyCT5SH2A</string>
     <string name="map">Map</string>
     <string name="user_location_permission_explanation">UGHH JUST DO IT!</string>
-    <string name="user_location_permission_not_granted">OH OH IM CONVINCED!</string>
+    <string name="user_location_permission_not_granted">UGHH JUST DO IT!</string>
     <string name="addsign">addSign</string>
     <string name="camera">Camera</string>
     <string name="new_location">New lat: %1$s New longitude: %2$s</string>

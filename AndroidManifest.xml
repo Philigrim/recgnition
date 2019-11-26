@@ -31,11 +31,11 @@
         android:label="Zenklu valdovai"
         android:theme="@style/Theme.AppCompat.Light"
         android:networkSecurityConfig="@xml/network_security_config">
-        <activity android:name=".UserActivity"></activity>
+        <activity android:name=".DetectorActivity"></activity>
         <activity android:name=".TestCameraActivity" />
-        <activity android:name=".MapActivity" />
+        <activity android:name=".UserActivity" />
         <activity
-            android:name=".DetectorActivity"
+            android:name=".MapActivity"
             android:label="Zenklu valdovai"
             android:screenOrientation="portrait">
             <intent-filter>

@@ -2,16 +2,26 @@ package org.tensorflow.demo;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.res.AssetManager;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.os.Environment;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.Volley;
 import com.mapbox.android.core.location.LocationEngine;
 import com.mapbox.android.core.location.LocationEngineProvider;
 import com.mapbox.android.core.location.LocationEngineRequest;
@@ -32,8 +42,19 @@ import com.mapbox.mapboxsdk.maps.Style;
 import com.mapbox.mapboxsdk.style.layers.SymbolLayer;
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import static com.mapbox.mapboxsdk.style.expressions.Expression.literal;
@@ -48,9 +69,9 @@ import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconImage;
 public class MapActivity extends AppCompatActivity implements
         OnMapReadyCallback, PermissionsListener {
 
-    private static final String MARKER_SOURCE = "markers-source";
-    private static final String MARKER_STYLE_LAYER = "markers-style-layer";
-    private static final String MARKER_IMAGE = "custom-marker";
+    private ArrayList<Sign> signList = new ArrayList<Sign>();
+
+    private ArrayList<String> icons = new ArrayList<String>();
 
     private PermissionsManager permissionsManager;
     public MapboxMap mapboxMap;
@@ -95,17 +116,15 @@ public class MapActivity extends AppCompatActivity implements
             }
         });
 
-        buttonToAddSign.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                userLocation = callback.getLocation();
-
-                float userLat = (float)userLocation.getLatitude();
-                float userLong = (float)userLocation.getLongitude();
-
-                addMarkers(myStyle, userLong, userLat);
-            }
-        });
+//        buttonToAddSign.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                userLocation = callback.getLocation();
+//
+//                float userLat = (float)userLocation.getLatitude();
+//                float userLong = (float)userLocation.getLongitude();
+//            }
+//        });
     }
 
     private void openCamera(){
@@ -123,51 +142,63 @@ public class MapActivity extends AppCompatActivity implements
                     public void onStyleLoaded(@NonNull Style style) {
                         enableLocationComponent(style);
                         /* Image: An image is loaded. */
-                        style.addImage(MARKER_IMAGE, BitmapFactory.decodeResource(
-                                MapActivity.this.getResources(), R.drawable.ivaziuoti_draudziama));
                         myStyle = style;
+                        GetDataFromRest();
                     }
                 });
     }
 
-    private void addMarkers(@NonNull Style loadedMapStyle, float longitude, float latitude) {
-        List<Feature> features = new ArrayList<>();
-        features.add(Feature.fromGeometry(Point.fromLngLat(longitude, latitude)));
+    private void AddIconsToStyle(@NonNull Style style){
+        AssetManager am = getAssets();
+        int index = 0;
+        String fileName;
+        String[] files = new String[signList.size()];
 
-        /* Source: A data source specifies the geographic coordinate where the image marker gets placed. */
+        ArrayList<String> signNames = new ArrayList<String>();
 
-        loadedMapStyle.addSource(new GeoJsonSource((MARKER_SOURCE + index), FeatureCollection.fromFeatures(features)));
+        for(Sign sign : signList){
+            signNames.add(sign.getSign_name());
+        }
 
-        /* Style layer: A style layer ties together the source and image and specifies how they are displayed on the map. */
-        SymbolLayer singleLayer = new SymbolLayer(MARKER_STYLE_LAYER + index, MARKER_SOURCE + index);
-        singleLayer.setProperties(
-            iconImage(MARKER_IMAGE),
-                iconIgnorePlacement(true),
-                iconAllowOverlap(true));
+        try{
+            files = am.list("icon_images");
+        }catch(IOException e){
+            Log.println(Log.ERROR, "ERROR", e.toString());
+        }
 
-
-        loadedMapStyle.addLayer(singleLayer);
-
-//        new SymbolLayer((MARKER_STYLE_LAYER + index), (MARKER_SOURCE + index))
-//                .withProperties(
-//                        PropertyFactory.iconAllowOverlap(true),
-//                        PropertyFactory.iconIgnorePlacement(true),
-//                        PropertyFactory.iconImage(MARKER_IMAGE),
-//// Adjust the second number of the Float array based on the height of your marker image.
-//// This is because the bottom of the marker should be anchored to the coordinate point, rather
-//// than the middle of the marker being the anchor point on the map.
-//                        PropertyFactory.iconOffset(new Float[] {0f, 0f})
-
-        index++;
+        for (String file : files) {
+            fileName = file.substring(0, file.indexOf('.'));
+            if(signNames.contains(fileName)){
+                try{
+                    Log.println(Log.INFO, "INFO", fileName);
+                    Drawable d = Drawable.createFromStream(am.open("icon_images/" + file), null);
+                    style.addImage(signList.get(index).getSign_name(), BitmapFactory.decodeStream(am.open("icon_images/" + file)));
+                    index++;
+                }catch(IOException e) {
+                    Log.println(Log.ERROR, "ERROR", e.toString());
+                }
+            }
+        }
     }
 
-    public void addMarkersFromCamera(){
-        float latMultiplier = 1.01f;
-        float longMultiplier = 1.001f;
-        float userLat = (float)userLocation.getLatitude();
-        float userLong = (float)userLocation.getLongitude();
+    private void addMarkers(@NonNull Style loadedMapStyle) {
+        List<Feature> features = new ArrayList<>();
 
-        addMarkers(myStyle, userLong * longMultiplier, userLat * latMultiplier);
+        for(Sign sign : signList){
+            features.add(Feature.fromGeometry(sign.getPoint()));
+
+            /* Source: A data source specifies the geographic coordinate where the image marker gets placed. */
+            loadedMapStyle.addSource(new GeoJsonSource(sign.getUnique_sign_id(), FeatureCollection.fromFeatures(features)));
+
+            /* Style layer: A style layer ties together the source and image and specifies how they are displayed on the map. */
+            SymbolLayer singleLayer = new SymbolLayer(sign.getUnique_sign_layer_id(), sign.getUnique_sign_id());
+            singleLayer.setProperties(
+                    iconImage(sign.getSign_name()),
+                    iconIgnorePlacement(true),
+                    iconAllowOverlap(true));
+
+            loadedMapStyle.addLayer(singleLayer);
+        }
     }
 
     /**
@@ -241,6 +272,63 @@ public class MapActivity extends AppCompatActivity implements
             Toast.makeText(this, R.string.user_location_permission_not_granted, Toast.LENGTH_LONG).show();
             finish();
         }
+    }
+    
+    private void GetDataFromRest(){
+        String restURL = "http://193.219.91.103:9560/aslohas";
+
+        RequestQueue requestQueue = Volley.newRequestQueue(this);
+
+        JsonArrayRequest arrayRequest = new JsonArrayRequest(
+                Request.Method.GET,
+                restURL,
+                null,
+                new Response.Listener<JSONArray>(){
+                    @Override
+                    public void onResponse(JSONArray response){
+                        Log.e("Rest  worked", response.toString());
+
+                        JSONObject object;
+                        int uniqueId = 0;
+                        int uniqueLayerId = 0;
+
+                        try{
+                            for(int i = 0; i < response.length(); i++){
+                                object = response.getJSONObject(i);
+
+                                Sign sign = new Sign(object.getInt("kat_id"),
+                                        object.getInt("zen_id"),
+                                        object.getString("zen_pav"),
+                                        Point.fromJson(object.get("st_asgeojson").toString()),
+                                        uniqueId,
+                                        uniqueLayerId);
+
+                                signList.add(sign);
+
+                                uniqueId++;
+                                uniqueLayerId++;
+
+                                Log.e("BUGABUGA", MessageFormat.format("Kategorijos id: {0}\n Zenklo id: {1}\n Zenklo pavadinimas: {2}\n Zenklo latitude: {3}\n Zenklo longitude: {4}\n", signList.get(i).getCategory_id(),
+                                signList.get(i).getSign_id(), signList.get(i).getSign_name(), signList.get(i).getPoint().latitude(), signList.get(i).getPoint().longitude()));
+                            }
+
+                            AddIconsToStyle(myStyle);
+                            addMarkers(myStyle);
+
+                        }catch(JSONException e){
+                            Log.e("erroriukas toks", e.toString());
+                        }
+                    }
+                },
+
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e("Rest Response", error.toString());
+                    }
+                });
+
+        requestQueue.add(arrayRequest);
     }
 
     @Override
