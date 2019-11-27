@@ -21,15 +21,20 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.mapbox.android.core.location.LocationEngine;
 import com.mapbox.android.core.location.LocationEngineProvider;
 import com.mapbox.android.core.location.LocationEngineRequest;
 import com.mapbox.android.core.permissions.PermissionsListener;
 import com.mapbox.android.core.permissions.PermissionsManager;
+import com.mapbox.geojson.BoundingBox;
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
-import com.mapbox.geojson.Point;
+import org.postgis.Geometry;
+import org.postgis.PGgeometry;
+import org.postgis.Point;
+
 import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.location.LocationComponent;
 import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions;
@@ -51,6 +56,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -62,6 +68,8 @@ import static com.mapbox.mapboxsdk.style.expressions.Expression.step;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconAllowOverlap;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconIgnorePlacement;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconImage;
+import static java.sql.Types.NULL;
+import static org.postgis.PGgeometry.geomFromString;
 
 /**
  * Use the LocationComponent to easily add a device location "puck" to a Mapbox map.
@@ -79,6 +87,10 @@ public class MapActivity extends AppCompatActivity implements
     private Button buttonToCamera;
     private Button buttonToAddSign;
     private Location userLocation;
+
+    private RequestQueue requestQueue;
+    private String getURL = "http://193.219.91.103:9560/atvaizdavimas";
+    private String postURL = "http://193.219.91.103:9560/zenklu_log";
 
     private Random rand = new Random();
     private int index = 0;
@@ -116,15 +128,13 @@ public class MapActivity extends AppCompatActivity implements
             }
         });
 
-//        buttonToAddSign.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                userLocation = callback.getLocation();
-//
-//                float userLat = (float)userLocation.getLatitude();
-//                float userLong = (float)userLocation.getLongitude();
-//            }
-//        });
+        buttonToAddSign.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                userLocation = callback.getLocation();
+                SendDataToRest((float) userLocation.getLatitude(), (float)userLocation.getLongitude());
+            }
+        });
     }
 
     private void openCamera(){
@@ -150,15 +160,8 @@ public class MapActivity extends AppCompatActivity implements
 
     private void AddIconsToStyle(@NonNull Style style){
         AssetManager am = getAssets();
-        int index = 0;
         String fileName;
         String[] files = new String[signList.size()];
-
-        ArrayList<String> signNames = new ArrayList<String>();
-
-        for(Sign sign : signList){
-            signNames.add(sign.getSign_name());
-        }
 
         try{
             files = am.list("icon_images");
@@ -168,36 +171,41 @@ public class MapActivity extends AppCompatActivity implements
 
         for (String file : files) {
             fileName = file.substring(0, file.indexOf('.'));
-            if(signNames.contains(fileName)){
-                try{
-                    Log.println(Log.INFO, "INFO", fileName);
-                    Drawable d = Drawable.createFromStream(am.open("icon_images/" + file), null);
-                    style.addImage(signList.get(index).getSign_name(), BitmapFactory.decodeStream(am.open("icon_images/" + file)));
-                    index++;
-                }catch(IOException e) {
-                    Log.println(Log.ERROR, "ERROR", e.toString());
-                }
+            try{
+                Log.println(Log.INFO, "INFO", fileName);
+                Drawable d = Drawable.createFromStream(am.open("icon_images/" + file), null);
+                style.addImage(fileName, BitmapFactory.decodeStream(am.open("icon_images/" + file)));
+            }catch(IOException e) {
+                Log.println(Log.ERROR, "ERROR", e.toString());
             }
         }
     }
 
     private void addMarkers(@NonNull Style loadedMapStyle) {
         List<Feature> features = new ArrayList<>();
+        List<String> addedSignIds = new ArrayList<String>();
+        List<String> addedSignLayerIds = new ArrayList<String>();
 
         for(Sign sign : signList){
-            features.add(Feature.fromGeometry(sign.getPoint()));
 
-            /* Source: A data source specifies the geographic coordinate where the image marker gets placed. */
-            loadedMapStyle.addSource(new GeoJsonSource(sign.getUnique_sign_id(), FeatureCollection.fromFeatures(features)));
+            if(!addedSignIds.contains(sign.getUnique_sign_id()) || addedSignLayerIds.contains(sign.getUnique_sign_layer_id())){
+                features.add(Feature.fromGeometry(com.mapbox.geojson.Point.fromLngLat(sign.getPoint().x, sign.getPoint().y)));
 
-            /* Style layer: A style layer ties together the source and image and specifies how they are displayed on the map. */
-            SymbolLayer singleLayer = new SymbolLayer(sign.getUnique_sign_layer_id(), sign.getUnique_sign_id());
-            singleLayer.setProperties(
-                    iconImage(sign.getSign_name()),
-                    iconIgnorePlacement(true),
-                    iconAllowOverlap(true));
 
-            loadedMapStyle.addLayer(singleLayer);
+                /* Source: A data source specifies the geographic coordinate where the image marker gets placed. */
+                loadedMapStyle.addSource(new GeoJsonSource(sign.getUnique_sign_id(), FeatureCollection.fromFeatures(features)));
+
+                /* Style layer: A style layer ties together the source and image and specifies how they are displayed on the map. */
+                SymbolLayer singleLayer = new SymbolLayer(sign.getUnique_sign_layer_id(), sign.getUnique_sign_id());
+                singleLayer.setProperties(
+                        iconImage(sign.getSign_name()),
+                        iconIgnorePlacement(true),
+                        iconAllowOverlap(true));
+
+                loadedMapStyle.addLayer(singleLayer);
+                addedSignIds.add(sign.getUnique_sign_id());
+                addedSignLayerIds.add(sign.getUnique_sign_layer_id());
+            }
         }
     }
 
@@ -275,13 +283,9 @@ public class MapActivity extends AppCompatActivity implements
     }
     
     private void GetDataFromRest(){
-        String restURL = "http://193.219.91.103:9560/aslohas";
-
-        RequestQueue requestQueue = Volley.newRequestQueue(this);
-
         JsonArrayRequest arrayRequest = new JsonArrayRequest(
                 Request.Method.GET,
-                restURL,
+                getURL,
                 null,
                 new Response.Listener<JSONArray>(){
                     @Override
@@ -293,13 +297,20 @@ public class MapActivity extends AppCompatActivity implements
                         int uniqueLayerId = 0;
 
                         try{
+                            Point point = new Point();
                             for(int i = 0; i < response.length(); i++){
                                 object = response.getJSONObject(i);
+
+                                try{
+                                    point = new Point(object.getString("st_astext"));
+                                }catch(SQLException e){
+                                    Log.e("POINTAS", e.toString());
+                                }
 
                                 Sign sign = new Sign(object.getInt("kat_id"),
                                         object.getInt("zen_id"),
                                         object.getString("zen_pav"),
-                                        Point.fromJson(object.get("st_asgeojson").toString()),
+                                        point,
                                         uniqueId,
                                         uniqueLayerId);
 
@@ -308,8 +319,8 @@ public class MapActivity extends AppCompatActivity implements
                                 uniqueId++;
                                 uniqueLayerId++;
 
-                                Log.e("BUGABUGA", MessageFormat.format("Kategorijos id: {0}\n Zenklo id: {1}\n Zenklo pavadinimas: {2}\n Zenklo latitude: {3}\n Zenklo longitude: {4}\n", signList.get(i).getCategory_id(),
-                                signList.get(i).getSign_id(), signList.get(i).getSign_name(), signList.get(i).getPoint().latitude(), signList.get(i).getPoint().longitude()));
+                                Log.e("BUGABUGA", MessageFormat.format("Kategorijos id: {0}\n Zenklo id: {1}\n Zenklo pavadinimas: {2}\n Zenklo point: {3}\n", signList.get(i).getCategory_id(),
+                                signList.get(i).getSign_id(), signList.get(i).getSign_name(), signList.get(i).getPoint()));
                             }
 
                             AddIconsToStyle(myStyle);
@@ -328,7 +339,62 @@ public class MapActivity extends AppCompatActivity implements
                     }
                 });
 
-        requestQueue.add(arrayRequest);
+        addToRequestQueue(arrayRequest, "getRequest");
+    }
+
+    private void SendDataToRest(float latitude, float longitude){
+        JSONObject postparams = new JSONObject();
+
+        Point point = new Point(longitude, latitude);
+
+        Geometry geometry = point;
+
+        geometry.setSrid(4326);
+
+        Log.e("GEOMETRY", " " + geometry);
+
+        try{
+            postparams.put("zen_id", "203");
+            postparams.put("tinkamumas", true);
+            postparams.put("var_id", 1);
+            postparams.put("grupes_id", null);
+            postparams.put("koordinate", geometry);
+            postparams.put("laikozyma", null);
+        }catch(JSONException j){
+            Log.e("blabla", j.toString());
+        }
+
+        JsonObjectRequest jsonObjReq = new JsonObjectRequest(Request.Method.POST,
+                postURL, postparams, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+
+            }
+        },
+        new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+            }
+        });
+
+// Adding the request to the queue along with a unique string tag
+        addToRequestQueue(jsonObjReq, "postRequest");
+    }
+
+    public RequestQueue getRequestQueue() {
+        if (requestQueue == null)
+            requestQueue = Volley.newRequestQueue(getApplicationContext());
+        return requestQueue;
+    }
+
+    public void addToRequestQueue(Request request, String tag) {
+        request.setTag(tag);
+        getRequestQueue().add(request);
+    }
+
+    public void cancelAllRequests(String tag) {
+        getRequestQueue().cancelAll(tag);
     }
 
     @Override

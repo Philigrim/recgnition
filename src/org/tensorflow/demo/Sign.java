@@ -1,6 +1,6 @@
 package org.tensorflow.demo;
 
-import com.mapbox.geojson.Point;
+import org.postgis.Point;
 
 public class Sign {
     private int category_id;
