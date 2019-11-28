@@ -25,17 +25,35 @@ import android.graphics.Paint;
 import android.graphics.Paint.Style;
 import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.location.Location;
 import android.media.ImageReader.OnImageAvailableListener;
 import android.os.SystemClock;
+import android.util.Log;
 import android.util.Size;
 import android.util.TypedValue;
 import android.view.Display;
 import android.view.Surface;
 import android.widget.Toast;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+import com.google.android.gms.location.FusedLocationProviderClient;
+
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Timer;
 import java.util.Vector;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.postgis.Geometry;
+import org.postgis.Point;
 import org.tensorflow.demo.OverlayView.DrawCallback;
 import org.tensorflow.demo.env.BorderedText;
 import org.tensorflow.demo.env.ImageUtils;
@@ -118,6 +136,21 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private byte[] luminanceCopy;
 
   private BorderedText borderedText;
+
+  //Musu kintamieji.
+
+  private MapActivity mapActivity = new MapActivity();
+
+  private MapActivityLocationCallback callback = new MapActivityLocationCallback(mapActivity);
+
+  private RequestQueue requestQueue;
+
+  private HashMap<String, String> signHashMap = Sign.SignNameIdHashMap();
+
+  private String postURL = "http://193.219.91.103:9560/zenklu_log";
+
+  private FusedLocationProviderClient fusedLocationProviderClient;
+
   @Override
   public void onPreviewSizeChosen(final Size size, final int rotation) {
     final float textSizePx =
@@ -314,12 +347,21 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
             for (final Classifier.Recognition result : results) {
               final RectF location = result.getLocation();
-              if (location != null && result.getConfidence() >= minimumConfidence) {
+              String currentSign = "";
+              if (location != null && result.getConfidence() >= minimumConfidence && !result.getTitle().equals(currentSign)) {
                 canvas.drawRect(location, paint);
 
                 cropToFrameTransform.mapRect(location);
                 result.setLocation(location);
                 mappedRecognitions.add(result);
+
+                currentSign = result.getTitle();
+
+                Log.e("NIGGAWHOKNOWS", currentSign);
+
+                Log.e("whydont", "bleee");
+
+                SendDataToRest((float)sharedLocation.getLatitude(), (float)sharedLocation.getLongitude(), currentSign);
               }
             }
 
@@ -330,6 +372,61 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             computingDetection = false;
           }
         });
+  }
+
+  private void SendDataToRest(float latitude, float longitude, String signName){
+        JSONObject postparams = new JSONObject();
+
+        Point point = new Point(longitude, latitude);
+
+        Geometry geometry = point;
+
+        geometry.setSrid(4326);
+
+        Log.e("GEOMETRY", " " + geometry);
+
+        try{
+          postparams.put("zen_id", signHashMap.get(signName));
+          postparams.put("tinkamumas", true);
+          postparams.put("var_id", 1);
+          postparams.put("grupes_id", null);
+          postparams.put("koordinate", geometry);
+          postparams.put("laikozyma", null);
+        }catch(JSONException j){
+          Log.e("blabla", j.toString());
+        }
+
+        JsonObjectRequest jsonObjReq = new JsonObjectRequest(Request.Method.POST,
+                postURL, postparams, new Response.Listener<JSONObject>() {
+          @Override
+          public void onResponse(JSONObject response) {
+
+          }
+        },
+                new Response.ErrorListener() {
+                  @Override
+                  public void onErrorResponse(VolleyError error) {
+
+                  }
+                });
+
+      // Adding the request to the queue along with a unique string tag
+        addToRequestQueue(jsonObjReq, "postRequest");
+  }
+
+  public RequestQueue getRequestQueue() {
+    if (requestQueue == null)
+      requestQueue = Volley.newRequestQueue(getApplicationContext());
+    return requestQueue;
+  }
+
+  public void addToRequestQueue(Request request, String tag) {
+    request.setTag(tag);
+    getRequestQueue().add(request);
+  }
+
+  public void cancelAllRequests(String tag) {
+    getRequestQueue().cancelAll(tag);
   }
 
   @Override

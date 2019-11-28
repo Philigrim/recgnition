@@ -10,7 +10,6 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -28,11 +27,9 @@ import com.mapbox.android.core.location.LocationEngineProvider;
 import com.mapbox.android.core.location.LocationEngineRequest;
 import com.mapbox.android.core.permissions.PermissionsListener;
 import com.mapbox.android.core.permissions.PermissionsManager;
-import com.mapbox.geojson.BoundingBox;
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
 import org.postgis.Geometry;
-import org.postgis.PGgeometry;
 import org.postgis.Point;
 
 import com.mapbox.mapboxsdk.Mapbox;
@@ -51,25 +48,15 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Random;
 
-import static com.mapbox.mapboxsdk.style.expressions.Expression.literal;
-import static com.mapbox.mapboxsdk.style.expressions.Expression.step;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconAllowOverlap;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconIgnorePlacement;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconImage;
-import static java.sql.Types.NULL;
-import static org.postgis.PGgeometry.geomFromString;
 
 /**
  * Use the LocationComponent to easily add a device location "puck" to a Mapbox map.
@@ -78,8 +65,6 @@ public class MapActivity extends AppCompatActivity implements
         OnMapReadyCallback, PermissionsListener {
 
     private ArrayList<Sign> signList = new ArrayList<Sign>();
-
-    private ArrayList<String> icons = new ArrayList<String>();
 
     private PermissionsManager permissionsManager;
     public MapboxMap mapboxMap;
@@ -90,10 +75,6 @@ public class MapActivity extends AppCompatActivity implements
 
     private RequestQueue requestQueue;
     private String getURL = "http://193.219.91.103:9560/atvaizdavimas";
-    private String postURL = "http://193.219.91.103:9560/zenklu_log";
-
-    private Random rand = new Random();
-    private int index = 0;
 
     private Style myStyle;
 
@@ -103,6 +84,7 @@ public class MapActivity extends AppCompatActivity implements
     private long DEFAULT_MAX_WAIT_TIME = DEFAULT_INTERVAL_IN_MILLISECONDS * 5;
     // Variables needed to listen to location updates
     private MapActivityLocationCallback callback = new MapActivityLocationCallback(this);
+    private int timesAdded = 0;
 
 
     @Override
@@ -125,14 +107,6 @@ public class MapActivity extends AppCompatActivity implements
             @Override
             public void onClick(View view) {
                 openCamera();
-            }
-        });
-
-        buttonToAddSign.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                userLocation = callback.getLocation();
-                SendDataToRest((float) userLocation.getLatitude(), (float)userLocation.getLongitude());
             }
         });
     }
@@ -186,14 +160,16 @@ public class MapActivity extends AppCompatActivity implements
         List<String> addedSignIds = new ArrayList<String>();
         List<String> addedSignLayerIds = new ArrayList<String>();
 
+        Log.e("SIGN ILGIS", " " + signList.size());
+
         for(Sign sign : signList){
 
             if(!addedSignIds.contains(sign.getUnique_sign_id()) || addedSignLayerIds.contains(sign.getUnique_sign_layer_id())){
-                features.add(Feature.fromGeometry(com.mapbox.geojson.Point.fromLngLat(sign.getPoint().x, sign.getPoint().y)));
+                Feature feature = Feature.fromGeometry(com.mapbox.geojson.Point.fromLngLat(sign.getPoint().x, sign.getPoint().y));
 
 
                 /* Source: A data source specifies the geographic coordinate where the image marker gets placed. */
-                loadedMapStyle.addSource(new GeoJsonSource(sign.getUnique_sign_id(), FeatureCollection.fromFeatures(features)));
+                loadedMapStyle.addSource(new GeoJsonSource(sign.getUnique_sign_id(), feature));
 
                 /* Style layer: A style layer ties together the source and image and specifies how they are displayed on the map. */
                 SymbolLayer singleLayer = new SymbolLayer(sign.getUnique_sign_layer_id(), sign.getUnique_sign_id());
@@ -207,6 +183,8 @@ public class MapActivity extends AppCompatActivity implements
                 addedSignLayerIds.add(sign.getUnique_sign_layer_id());
             }
         }
+
+        cancelAllRequests("getRequest");
     }
 
     /**
@@ -323,8 +301,13 @@ public class MapActivity extends AppCompatActivity implements
                                 signList.get(i).getSign_id(), signList.get(i).getSign_name(), signList.get(i).getPoint()));
                             }
 
-                            AddIconsToStyle(myStyle);
-                            addMarkers(myStyle);
+                            if(timesAdded == 0){
+                                AddIconsToStyle(myStyle);
+                                addMarkers(myStyle);
+                                timesAdded++;
+                            }
+
+                            cancelAllRequests("getRequest");
 
                         }catch(JSONException e){
                             Log.e("erroriukas toks", e.toString());
@@ -340,46 +323,6 @@ public class MapActivity extends AppCompatActivity implements
                 });
 
         addToRequestQueue(arrayRequest, "getRequest");
-    }
-
-    private void SendDataToRest(float latitude, float longitude){
-        JSONObject postparams = new JSONObject();
-
-        Point point = new Point(longitude, latitude);
-
-        Geometry geometry = point;
-
-        geometry.setSrid(4326);
-
-        Log.e("GEOMETRY", " " + geometry);
-
-        try{
-            postparams.put("zen_id", "203");
-            postparams.put("tinkamumas", true);
-            postparams.put("var_id", 1);
-            postparams.put("grupes_id", null);
-            postparams.put("koordinate", geometry);
-            postparams.put("laikozyma", null);
-        }catch(JSONException j){
-            Log.e("blabla", j.toString());
-        }
-
-        JsonObjectRequest jsonObjReq = new JsonObjectRequest(Request.Method.POST,
-                postURL, postparams, new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-
-            }
-        },
-        new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-
-            }
-        });
-
-// Adding the request to the queue along with a unique string tag
-        addToRequestQueue(jsonObjReq, "postRequest");
     }
 
     public RequestQueue getRequestQueue() {

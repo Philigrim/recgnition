@@ -27,6 +27,7 @@ import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.location.Location;
 import android.media.Image;
 import android.media.Image.Plane;
 import android.media.ImageReader;
@@ -56,6 +57,9 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.OptionalPendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.nio.ByteBuffer;
 import org.tensorflow.demo.env.ImageUtils;
@@ -93,11 +97,27 @@ public abstract class CameraActivity extends AppCompatActivity
   private GoogleApiClient googleApiClient;
   private GoogleSignInOptions gso;
 
+  private FusedLocationProviderClient fusedLocationProviderClient;
+  protected Location sharedLocation;
+
   @Override
   protected void onCreate(final Bundle savedInstanceState) {
     LOGGER.d("onCreate " + this);
     super.onCreate(null);
     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+    fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+
+    fusedLocationProviderClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
+      @Override
+      public void onSuccess(Location location) {
+        if(location != null){
+          sharedLocation = location;
+        }else{
+          //Say something.
+        }
+      }
+    });
 
     setContentView(R.layout.activity_camera);
     buttonToMap = findViewById(R.id.mapButton);
@@ -136,7 +156,7 @@ public abstract class CameraActivity extends AppCompatActivity
                   @Override
                   public void onResult(Status status) {
                     if (status.isSuccess()){
-                      gotoSignInActivity();
+                      //gotoSignInActivity();
                     }else{
                       Toast.makeText(getApplicationContext(),"Session not close",Toast.LENGTH_LONG).show();
                     }
@@ -173,7 +193,7 @@ public abstract class CameraActivity extends AppCompatActivity
     }
 
     else{
-      gotoSignInActivity();
+      //gotoSignInActivity();
     }
   }
 

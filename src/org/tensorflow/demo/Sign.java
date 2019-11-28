@@ -2,6 +2,8 @@ package org.tensorflow.demo;
 
 import org.postgis.Point;
 
+import java.util.HashMap;
+
 public class Sign {
     private int category_id;
     private int sign_id;
@@ -17,6 +19,24 @@ public class Sign {
         this.point = point;
         this.unique_sign_id += unique_sign_id;
         this.unique_sign_layer_id += unique_sign_layer_id;
+    }
+
+    Sign(String sign_name){
+        this.sign_name = sign_name;
+    }
+
+    public static HashMap<String, String> SignNameIdHashMap(){
+        HashMap<String, String> signHashMap = new HashMap<String, String>();
+        signHashMap.put("Greicio mazinimo priemone", "151");
+        signHashMap.put("Stotele", "730");
+        signHashMap.put("Pesciuju pereja", "533");
+        signHashMap.put("Ivaziuoti draudziama", "301");
+        signHashMap.put("Duoti kelia", "203");
+        signHashMap.put("Pagrindinis kelias", "201");
+        signHashMap.put("Sustoti draudziama", "332");
+        signHashMap.put("Stovejimo vieta", "528");
+
+        return signHashMap;
     }
 
     public int getCategory_id() {
