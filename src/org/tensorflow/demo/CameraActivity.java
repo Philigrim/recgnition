@@ -85,6 +85,8 @@ public abstract class CameraActivity extends AppCompatActivity
   private int[] rgbBytes = null;
   private int yRowStride;
 
+  private int backButtonCount = 0;
+
   protected int previewWidth = 0;
   protected int previewHeight = 0;
 
@@ -92,6 +94,7 @@ public abstract class CameraActivity extends AppCompatActivity
   private Runnable imageConverter;
 
   private Button buttonToMap;
+  private Button buttonToRecord;
   Button buttonLogout;
 
   private GoogleApiClient googleApiClient;
@@ -101,9 +104,10 @@ public abstract class CameraActivity extends AppCompatActivity
   protected Location sharedLocation;
 
   @Override
-  protected void onCreate(final Bundle savedInstanceState) {
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.activity_camera);
     LOGGER.d("onCreate " + this);
-    super.onCreate(null);
     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
     fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
@@ -119,8 +123,10 @@ public abstract class CameraActivity extends AppCompatActivity
       }
     });
 
-    setContentView(R.layout.activity_camera);
     buttonToMap = findViewById(R.id.mapButton);
+    buttonToMap.setOnClickListener(onToMapPressed);
+    buttonToRecord = findViewById(R.id.recordActivityButton);
+    buttonToRecord.setOnClickListener(onToRecordPressed);
     buttonLogout=(Button)findViewById(R.id.sign_out); //SIGN OUT BUTTON
 
     if (hasPermission()) {
@@ -128,13 +134,6 @@ public abstract class CameraActivity extends AppCompatActivity
     } else {
       requestPermission();
     }
-
-    buttonToMap.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View view) {
-        openMap();
-      }
-    });
 
     //toliau kodas susijes su sign out button
 
@@ -165,6 +164,39 @@ public abstract class CameraActivity extends AppCompatActivity
       }
     });
   }
+
+  @Override
+  public void onBackPressed()
+  {
+    if(backButtonCount >= 1)
+    {
+      Intent intent = new Intent(Intent.ACTION_MAIN);
+      intent.addCategory(Intent.CATEGORY_HOME);
+      intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+      startActivity(intent);
+    }
+    else
+    {
+      Toast.makeText(this, "Press the back button once again to close the application.", Toast.LENGTH_SHORT).show();
+      backButtonCount++;
+    }
+  }
+
+  Button.OnClickListener onToMapPressed = new Button.OnClickListener() {
+    @Override
+    public void onClick(View v) {
+      Intent intent = new Intent(getApplicationContext(), MapActivity.class);
+      startActivity(intent);
+    }
+  };
+
+  Button.OnClickListener onToRecordPressed = new Button.OnClickListener() {
+    @Override
+    public void onClick(View v) {
+      Intent intent = new Intent(getApplicationContext(), RecordActivity.class);
+      startActivity(intent);
+    }
+  };
 
   @Override
   public synchronized void onStart() {
@@ -208,11 +240,6 @@ public abstract class CameraActivity extends AppCompatActivity
   }
 
   //kodo susijusio su sign out pabaiga
-
-  private void openMap(){
-    Intent intent = new Intent(this, MapActivity.class);
-    startActivity(intent);
-  }
 
   private byte[] lastPreviewFrame;
 

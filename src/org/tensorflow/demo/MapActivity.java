@@ -98,23 +98,27 @@ public class MapActivity extends AppCompatActivity implements
 // This contains the MapView in XML and needs to be called after the access token is configured.
         setContentView(R.layout.activity_map);
         buttonToCamera = findViewById(R.id.cameraButton);
+        buttonToCamera.setOnClickListener(onToCameraPressed);
         buttonToAddSign = findViewById(R.id.addSign);
         mapView = findViewById(R.id.mapView);
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
-
-        buttonToCamera.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                openCamera();
-            }
-        });
     }
 
-    private void openCamera(){
-        Intent intent = new Intent(this, DetectorActivity.class);
+    @Override
+    public void onBackPressed()
+    {
+        Intent intent = new Intent(getApplicationContext(), DetectorActivity.class);
         startActivity(intent);
     }
+
+    Button.OnClickListener onToCameraPressed = new Button.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            Intent intent = new Intent(getApplicationContext(), DetectorActivity.class);
+            startActivity(intent);
+        }
+    };
 
     @Override
     public void onMapReady(@NonNull final MapboxMap mapboxMap) {
