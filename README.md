@@ -7,5 +7,5 @@ Overleaf link'as: https://www.overleaf.com/9188281323xhctmrstcjvs
 būkite tikri, jog savo telefone esate įsijungė 'Developer' rėžimą (kaip tą padaryti rasite Google). Prijungę savo telefoną su USB prie kompiuterio, Android Studio turėtų aptikti jūsų telefoną ir norėdami kodą sukompiliuoti telefone,
 spauskite RUN. 
 3. Norėdami prisijungti prie mūsų virtualios mašinos ir duomenų bazės terminale naudoti šias komandas:
-    ssh -L 5500:localhost:5432 -p 1574 neja5785@193.219.91.103
+   \n ssh -L 5500:localhost:5432 -p 1574 neja5785@193.219.91.103
     psql -d zenklu_valdovai -U (kazkoks useris)
