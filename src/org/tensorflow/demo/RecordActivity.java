@@ -52,11 +52,6 @@ public class RecordActivity extends Activity implements LocationListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_record);
 
-        Toast.makeText(getApplicationContext(), "Record is not working properly yet", Toast.LENGTH_LONG).show();
-
-
-
-
         recording = false;
 
         // check for gps permission
