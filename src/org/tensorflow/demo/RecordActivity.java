@@ -194,6 +194,9 @@ public class RecordActivity extends Activity implements LocationListener {
 
     private boolean prepareMediaRecorder(){
         myCamera = getCameraInstance();
+        
+        myCamera.setDisplayOrientation(90); // preview while recording
+        
         mediaRecorder = new MediaRecorder();
 
         myCamera.unlock();
@@ -201,6 +204,8 @@ public class RecordActivity extends Activity implements LocationListener {
 
         mediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
         mediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
+
+        mediaRecorder.setOrientationHint(90); // file rotation
 
         mediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH));
 
