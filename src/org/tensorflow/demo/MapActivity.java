@@ -70,8 +70,6 @@ public class MapActivity extends AppCompatActivity implements
     public MapboxMap mapboxMap;
     private MapView mapView;
     private Button buttonToCamera;
-    private Button buttonToAddSign;
-    private Location userLocation;
 
     private RequestQueue requestQueue;
     private String getURL = "http://193.219.91.103:9560/atvaizdavimas";
@@ -99,7 +97,6 @@ public class MapActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_map);
         buttonToCamera = findViewById(R.id.cameraButton);
         buttonToCamera.setOnClickListener(onToCameraPressed);
-        buttonToAddSign = findViewById(R.id.addSign);
         mapView = findViewById(R.id.mapView);
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);

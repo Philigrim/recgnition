@@ -162,41 +162,15 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     tracker = new MultiBoxTracker(this);
 
     int cropSize = TF_OD_API_INPUT_SIZE;
-    if (MODE == DetectorMode.YOLO) {
-      detector =
-          TensorFlowYoloDetector.create(
-              getAssets(),
-              YOLO_MODEL_,
-              YOLO_INPUT_SIZE,
-              YOLO_INPUT_NAME,
-              YOLO_OUTPUT_NAMES,
-              YOLO_BLOCK_SIZE);
-      cropSize = YOLO_INPUT_SIZE;
-    } else if (MODE == DetectorMode.MULTIBOX) {
-      detector =
-          TensorFlowMultiBoxDetector.create(
-              getAssets(),
-              MB_MODEL_,
-              MB_LOCATION_,
-              MB_IMAGE_MEAN,
-              MB_IMAGE_STD,
-              MB_INPUT_NAME,
-              MB_OUTPUT_LOCATIONS_NAME,
-              MB_OUTPUT_SCORES_NAME);
-      cropSize = MB_INPUT_SIZE;
-    } else {
-      try {
-        detector = TensorFlowObjectDetectionAPIModel.create(
-            getAssets(), TF_OD_API_MODEL_, TF_OD_API_LABELS_, TF_OD_API_INPUT_SIZE);
-        cropSize = TF_OD_API_INPUT_SIZE;
-      } catch (final IOException e) {
-        LOGGER.e(e, "Exception initializing classifier!");
-        Toast toast =
-            Toast.makeText(
-                getApplicationContext(), "Classifier could not be initialized", Toast.LENGTH_SHORT);
-        toast.show();
-        finish();
-      }
+
+    try {
+      detector = TensorFlowObjectDetectionAPIModel.create(getAssets(), TF_OD_API_MODEL_, TF_OD_API_LABELS_, TF_OD_API_INPUT_SIZE);
+      cropSize = TF_OD_API_INPUT_SIZE;
+    } catch (final IOException e) {
+      LOGGER.e(e, "Exception initializing classifier!");
+      Toast toast = Toast.makeText(getApplicationContext(), "Classifier could not be initialized", Toast.LENGTH_SHORT);
+      toast.show();
+      finish();
     }
 
     previewWidth = size.getWidth();

@@ -24,13 +24,6 @@
     android:paddingBottom="40dp">
 
     <Button
-        android:id="@+id/sign_out"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="SIGN OUT"
-        android:layout_alignParentEnd="true"/>
-
-    <Button
         android:id="@+id/mapButton"
         android:layout_width="88dp"
         android:layout_height="wrap_content"

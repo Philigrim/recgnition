@@ -48,15 +48,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.android.gms.auth.api.Auth;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.auth.api.signin.GoogleSignInResult;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.OptionalPendingResult;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -67,7 +58,7 @@ import org.tensorflow.demo.env.Logger;
 import org.tensorflow.demo.R; // Explicit import needed for internal Google builds.
 
 public abstract class CameraActivity extends AppCompatActivity
-    implements OnImageAvailableListener, Camera.PreviewCallback, GoogleApiClient.OnConnectionFailedListener {
+    implements OnImageAvailableListener, Camera.PreviewCallback{
   private static final Logger LOGGER = new Logger();
 
   private static final int PERMISSIONS_REQUEST = 1;
@@ -95,10 +86,6 @@ public abstract class CameraActivity extends AppCompatActivity
 
   private Button buttonToMap;
   private Button buttonToRecord;
-  Button buttonLogout;
-
-  private GoogleApiClient googleApiClient;
-  private GoogleSignInOptions gso;
 
   private FusedLocationProviderClient fusedLocationProviderClient;
   protected Location sharedLocation;
@@ -127,42 +114,12 @@ public abstract class CameraActivity extends AppCompatActivity
     buttonToMap.setOnClickListener(onToMapPressed);
     buttonToRecord = findViewById(R.id.recordActivityButton);
     buttonToRecord.setOnClickListener(onToRecordPressed);
-    buttonLogout=(Button)findViewById(R.id.sign_out); //SIGN OUT BUTTON
 
     if (hasPermission()) {
       setFragment();
     } else {
       requestPermission();
     }
-
-    //toliau kodas susijes su sign out button
-
-    gso =  new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestEmail()
-            .build();
-
-    googleApiClient=new GoogleApiClient.Builder(this)
-            .enableAutoManage(this,this)
-            .addApi(Auth.GOOGLE_SIGN_IN_API,gso)
-            .build();
-
-
-    buttonLogout.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View view) {
-        Auth.GoogleSignInApi.signOut(googleApiClient).setResultCallback(
-                new ResultCallback<Status>() {
-                  @Override
-                  public void onResult(Status status) {
-                    if (status.isSuccess()){
-                      //gotoSignInActivity();
-                    }else{
-                      Toast.makeText(getApplicationContext(),"Session not close",Toast.LENGTH_LONG).show();
-                    }
-                  }
-                });
-      }
-    });
   }
 
   @Override
@@ -202,44 +159,8 @@ public abstract class CameraActivity extends AppCompatActivity
   public synchronized void onStart() {
     LOGGER.d("onStart " + this);
     super.onStart();
-
-    // toliau kodas susijes su sign out
-
-    OptionalPendingResult<GoogleSignInResult> opr= Auth.GoogleSignInApi.silentSignIn(googleApiClient);
-    if(opr.isDone()){
-      GoogleSignInResult result=opr.get();
-      handleSignInResult(result);
-    }else{
-      opr.setResultCallback(new ResultCallback<GoogleSignInResult>() {
-        @Override
-        public void onResult(@NonNull GoogleSignInResult googleSignInResult) {
-          handleSignInResult(googleSignInResult);
-        }
-      });
-    }
   }
 
-  private void handleSignInResult(GoogleSignInResult result){
-    if(result.isSuccess()) {
-      GoogleSignInAccount account = result.getSignInAccount();
-    }
-
-    else{
-      //gotoSignInActivity();
-    }
-  }
-
-  private void gotoSignInActivity(){
-    Intent intent=new Intent(this,SignInActivity.class);
-    startActivity(intent);
-  }
-
-  @Override
-  public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
-  }
-
-  //kodo susijusio su sign out pabaiga
 
   private byte[] lastPreviewFrame;
 
@@ -488,7 +409,7 @@ public abstract class CameraActivity extends AppCompatActivity
         // This should help with legacy situations where using the camera2 API causes
         // distorted or otherwise broken previews.
         useCamera2API = (facing == CameraCharacteristics.LENS_FACING_EXTERNAL)
-            || isHardwareLevelSupported(characteristics, 
+            || isHardwareLevelSupported(characteristics,
                                         CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_FULL);
         LOGGER.i("Camera API lv2?: %s", useCamera2API);
         return cameraId;
@@ -526,8 +447,7 @@ public abstract class CameraActivity extends AppCompatActivity
       camera2Fragment.setCamera(cameraId);
       fragment = camera2Fragment;
     } else {
-      fragment =
-          new LegacyCameraConnectionFragment(this, getLayoutId(), getDesiredPreviewFrameSize());
+      fragment = new LegacyCameraConnectionFragment(this, getLayoutId(), getDesiredPreviewFrameSize());
     }
 
     getFragmentManager()

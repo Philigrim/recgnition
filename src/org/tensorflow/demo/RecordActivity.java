@@ -22,6 +22,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Chronometer;
@@ -109,10 +110,9 @@ public class RecordActivity extends Activity implements LocationListener {
                     mediaRecorder.stop();  // stop the recording
                     releaseMediaRecorder(); // release the MediaRecorder object
 
-                    //Exit after saved
-                    //finish();
-                    recordButton.setText("REC");
                     recording = false;
+
+                    recordButton.setText("REC");
                 }else{
 
                     dateAndTime.setVisibility(View.VISIBLE);
@@ -122,7 +122,6 @@ public class RecordActivity extends Activity implements LocationListener {
 
                     durationChronometer.setBase(SystemClock.elapsedRealtime());
                     durationChronometer.start();
-                    dateAndTimeTracking();
 
                     //Release Camera before MediaRecorder start
                     releaseCamera();
@@ -134,6 +133,9 @@ public class RecordActivity extends Activity implements LocationListener {
 
                     mediaRecorder.start();
                     recording = true;
+
+                    dateAndTimeTracking();
+
                     recordButton.setText("STOP");
                 }
             }catch (Exception ex){
@@ -144,7 +146,7 @@ public class RecordActivity extends Activity implements LocationListener {
     private void dateAndTimeTracking() {
         new Thread() {
             public void run() {
-                while (!recording) {
+                while (recording) {
                     try {
                         runOnUiThread(new Runnable() {
                             @Override
