@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.res.AssetManager;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Bundle;
@@ -13,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -33,6 +35,7 @@ import org.postgis.Geometry;
 import org.postgis.Point;
 
 import com.mapbox.mapboxsdk.Mapbox;
+import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.location.LocationComponent;
 import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions;
 import com.mapbox.mapboxsdk.location.modes.CameraMode;
@@ -41,6 +44,10 @@ import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.mapbox.mapboxsdk.maps.Style;
+import com.mapbox.mapboxsdk.plugins.annotation.OnSymbolClickListener;
+import com.mapbox.mapboxsdk.plugins.annotation.Symbol;
+import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager;
+import com.mapbox.mapboxsdk.plugins.annotation.SymbolOptions;
 import com.mapbox.mapboxsdk.style.layers.SymbolLayer;
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
 
@@ -52,6 +59,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconAllowOverlap;
@@ -64,7 +72,12 @@ import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconImage;
 public class MapActivity extends AppCompatActivity implements
         OnMapReadyCallback, PermissionsListener {
 
+    private static final String MARKER = "marker-icon";
+    private Symbol tempSymbol = null;
+
     private ArrayList<Sign> signList = new ArrayList<Sign>();
+    private HashMap<String, Drawable> signNameToSignDrawable = new HashMap<>();
+    private ImageView[] signPlaceHolders  = new ImageView[8];
 
     private PermissionsManager permissionsManager;
     public MapboxMap mapboxMap;
@@ -74,15 +87,13 @@ public class MapActivity extends AppCompatActivity implements
     private RequestQueue requestQueue;
     private String getURL = "http://193.219.91.103:9560/atvaizdavimas";
 
-    private Style myStyle;
-
     // Variables needed to add the location engine
     private LocationEngine locationEngine;
     private long DEFAULT_INTERVAL_IN_MILLISECONDS = 1000L;
     private long DEFAULT_MAX_WAIT_TIME = DEFAULT_INTERVAL_IN_MILLISECONDS * 5;
     // Variables needed to listen to location updates
     private MapActivityLocationCallback callback = new MapActivityLocationCallback(this);
-    private int timesAdded = 0;
+    SymbolManager sm;
 
 
     @Override
@@ -95,6 +106,16 @@ public class MapActivity extends AppCompatActivity implements
 
 // This contains the MapView in XML and needs to be called after the access token is configured.
         setContentView(R.layout.activity_map);
+
+        signPlaceHolders[0] = findViewById(R.id.image1);
+        signPlaceHolders[1] = findViewById(R.id.image2);
+        signPlaceHolders[2] = findViewById(R.id.image3);
+        signPlaceHolders[3] = findViewById(R.id.image4);
+        signPlaceHolders[4] = findViewById(R.id.image5);
+        signPlaceHolders[5] = findViewById(R.id.image6);
+        signPlaceHolders[6] = findViewById(R.id.image7);
+        signPlaceHolders[7] = findViewById(R.id.image8);
+
         buttonToCamera = findViewById(R.id.cameraButton);
         buttonToCamera.setOnClickListener(onToCameraPressed);
         mapView = findViewById(R.id.mapView);
@@ -127,13 +148,18 @@ public class MapActivity extends AppCompatActivity implements
                     public void onStyleLoaded(@NonNull Style style) {
                         enableLocationComponent(style);
                         /* Image: An image is loaded. */
-                        myStyle = style;
-                        GetDataFromRest();
+                        style.addImage(MARKER, BitmapFactory.decodeResource(
+                                MapActivity.this.getResources(), R.drawable.mapbox_marker_icon_default));
+                        sm = new SymbolManager(mapView, mapboxMap, style);
+                        sm.setIconAllowOverlap(true);
+                        sm.setIconIgnorePlacement(true);
+                        FillDrawableHashMap();
+                        GetDataFromRest(style);
                     }
                 });
     }
 
-    private void AddIconsToStyle(@NonNull Style style){
+    private void FillDrawableHashMap(){
         AssetManager am = getAssets();
         String fileName;
         String[] files = new String[signList.size()];
@@ -141,51 +167,71 @@ public class MapActivity extends AppCompatActivity implements
         try{
             files = am.list("icon_images");
         }catch(IOException e){
-            Log.println(Log.ERROR, "ERROR", e.toString());
+            Log.println(Log.ERROR, "FINDFILEERROR", e.toString());
         }
 
         for (String file : files) {
             fileName = file.substring(0, file.indexOf('.'));
             try{
-                Log.println(Log.INFO, "INFO", fileName);
-                Drawable d = Drawable.createFromStream(am.open("icon_images/" + file), null);
-                style.addImage(fileName, BitmapFactory.decodeStream(am.open("icon_images/" + file)));
+                Drawable d = new BitmapDrawable(MapActivity.this.getResources(), BitmapFactory.decodeStream(am.open("icon_images/" + file)));
+                signNameToSignDrawable.put(fileName, d);
             }catch(IOException e) {
-                Log.println(Log.ERROR, "ERROR", e.toString());
+                Log.println(Log.ERROR, "FILLDRAWABLEERROR", e.toString());
             }
         }
     }
 
-    private void addMarkers(@NonNull Style loadedMapStyle) {
-        List<Feature> features = new ArrayList<>();
-        List<String> addedSignIds = new ArrayList<String>();
-        List<String> addedSignLayerIds = new ArrayList<String>();
+    private void addMarkers() {
+        String data = "";
+        String name = signList.get(0).getSign_name();
 
-        Log.e("SIGN ILGIS", " " + signList.size());
+        for (Sign sign : signList) {
+            if (name.equals(sign.getSign_name())) {
+                data += sign.getSign_name() + ";";
+            } else {
+                sm.create(new SymbolOptions()
+                        .withLatLng(new LatLng(sign.getPoint().getY(), sign.getPoint().getX()))
+                        .withIconImage(MARKER)
+                        .withIconSize(1f)
+                        .withTextAnchor(data));
 
-        for(Sign sign : signList){
+                Log.println(Log.ERROR, "DATA", data);
 
-            if(!addedSignIds.contains(sign.getUnique_sign_id()) || addedSignLayerIds.contains(sign.getUnique_sign_layer_id())){
-                Feature feature = Feature.fromGeometry(com.mapbox.geojson.Point.fromLngLat(sign.getPoint().x, sign.getPoint().y));
-
-
-                /* Source: A data source specifies the geographic coordinate where the image marker gets placed. */
-                loadedMapStyle.addSource(new GeoJsonSource(sign.getUnique_sign_id(), feature));
-
-                /* Style layer: A style layer ties together the source and image and specifies how they are displayed on the map. */
-                SymbolLayer singleLayer = new SymbolLayer(sign.getUnique_sign_layer_id(), sign.getUnique_sign_id());
-                singleLayer.setProperties(
-                        iconImage(sign.getSign_name()),
-                        iconIgnorePlacement(true),
-                        iconAllowOverlap(true));
-
-                loadedMapStyle.addLayer(singleLayer);
-                addedSignIds.add(sign.getUnique_sign_id());
-                addedSignLayerIds.add(sign.getUnique_sign_layer_id());
+                data = sign.getSign_name() + ";";
+                name = sign.getSign_name();
             }
         }
 
-        cancelAllRequests("getRequest");
+        sm.create(new SymbolOptions()
+                .withLatLng(new LatLng(signList.get(signList.size() - 1).getPoint().getY(), signList.get(signList.size() - 1).getPoint().getX()))
+                .withIconImage(MARKER)
+                .withIconSize(1f)
+                .withTextAnchor(data));
+
+        sm.addClickListener(new OnSymbolClickListener() {
+            @Override
+            public void onAnnotationClick(Symbol symbol) {
+                if(tempSymbol == symbol){
+                    for (ImageView view : signPlaceHolders) {
+                        view.setImageDrawable(null);
+                    }
+                    tempSymbol = null;
+                }else{
+                    tempSymbol = symbol;
+                    String[] signNames = symbol.getTextAnchor().split(";");
+                    int index = 0;
+
+                    for (ImageView view : signPlaceHolders) {
+                        if(index < signNames.length){
+                            view.setImageDrawable(signNameToSignDrawable.get(signNames[index]));
+                            index++;
+                        }else{
+                            view.setImageDrawable(null);
+                        }
+                    }
+                }
+            }
+        });
     }
 
     /**
@@ -260,8 +306,8 @@ public class MapActivity extends AppCompatActivity implements
             finish();
         }
     }
-    
-    private void GetDataFromRest(){
+
+    private void GetDataFromRest(Style s){
         JsonArrayRequest arrayRequest = new JsonArrayRequest(
                 Request.Method.GET,
                 getURL,
@@ -272,8 +318,6 @@ public class MapActivity extends AppCompatActivity implements
                         Log.e("Rest  worked", response.toString());
 
                         JSONObject object;
-                        int uniqueId = 0;
-                        int uniqueLayerId = 0;
 
                         try{
                             Point point = new Point();
@@ -289,24 +333,12 @@ public class MapActivity extends AppCompatActivity implements
                                 Sign sign = new Sign(object.getInt("kat_id"),
                                         object.getInt("zen_id"),
                                         object.getString("zen_pav"),
-                                        point,
-                                        uniqueId,
-                                        uniqueLayerId);
+                                        point);
 
                                 signList.add(sign);
-
-                                uniqueId++;
-                                uniqueLayerId++;
-
-                                Log.e("BUGABUGA", MessageFormat.format("Kategorijos id: {0}\n Zenklo id: {1}\n Zenklo pavadinimas: {2}\n Zenklo point: {3}\n", signList.get(i).getCategory_id(),
-                                signList.get(i).getSign_id(), signList.get(i).getSign_name(), signList.get(i).getPoint()));
                             }
 
-                            if(timesAdded == 0){
-                                AddIconsToStyle(myStyle);
-                                addMarkers(myStyle);
-                                timesAdded++;
-                            }
+                            addMarkers();
 
                             cancelAllRequests("getRequest");
 

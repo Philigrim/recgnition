@@ -8,24 +8,179 @@
     android:layout_height="match_parent"
     tools:context="org.tensorflow.demo.MapActivity">
 
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true">
+
+        <ImageView
+            android:id="@+id/image1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="75dp"
+            android:padding="10dp" />
+
+        <ImageView
+            android:id="@+id/image2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="50dp"
+            android:layout_marginBottom="75dp"
+            android:padding="10dp" />
+
+        <ImageView
+            android:id="@+id/image3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="100dp"
+            android:layout_marginBottom="75dp"
+            android:padding="10dp" />
+
+        <ImageView
+            android:id="@+id/image4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="150dp"
+            android:layout_marginBottom="75dp"
+            android:padding="10dp" />
+
+        <ImageView
+            android:id="@+id/image5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="200dp"
+            android:layout_marginBottom="75dp"
+            android:padding="10dp" />
+
+        <ImageView
+            android:id="@+id/image6"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="250dp"
+            android:layout_marginBottom="75dp"
+            android:padding="10dp" />
+
+        <ImageView
+            android:id="@+id/image7"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="300dp"
+            android:layout_marginBottom="75dp"
+            android:padding="10dp" />
+
+        <ImageView
+            android:id="@+id/image8"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="350dp"
+            android:layout_marginBottom="75dp"
+            android:padding="10dp" />
+
+<!--        <Button-->
+<!--            android:id="@+id/selectSign"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_marginLeft="50dp"-->
+<!--            android:layout_marginTop="100dp"-->
+<!--            android:text="@string/select_sign"-->
+<!--            app:layout_constraintBottom_toBottomOf="@id/mapView"-->
+<!--            app:layout_constraintEnd_toEndOf="@id/mapView"-->
+<!--            app:layout_constraintStart_toStartOf="@id/mapView" />-->
+
+        <Button
+            android:id="@+id/cameraButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="200dp"
+            android:layout_marginTop="100dp"
+            android:text="@string/camera"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+    </com.google.android.material.bottomnavigation.BottomNavigationView>
+
+
     <com.mapbox.mapboxsdk.maps.MapView
         android:id="@+id/mapView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="0dp"
         mapbox:mapbox_cameraZoom="12">
 
     </com.mapbox.mapboxsdk.maps.MapView>
 
-    <Button
-        android:id="@+id/cameraButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="40dp"
-        android:text="@string/camera"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_centerInParent="true"
-        android:layout_alignParentBottom="true" />
+<!--    <CheckBox-->
+<!--        android:id="@+id/busStop"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:text="@string/bus_stop"-->
+<!--        android:checked="true"-->
+<!--        android:visibility="invisible" />-->
+
+<!--    <CheckBox-->
+<!--        android:id="@+id/giveWay"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginTop="25dp"-->
+<!--        android:text="@string/give_way"-->
+<!--        android:checked="true"-->
+<!--        android:visibility="invisible" />-->
+
+<!--    <CheckBox-->
+<!--        android:id="@+id/hump"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginTop="50dp"-->
+<!--        android:text="@string/hump"-->
+<!--        android:checked="true"-->
+<!--        android:visibility="invisible" />-->
+
+<!--    <CheckBox-->
+<!--        android:id="@+id/mainRoad"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginTop="75dp"-->
+<!--        android:text="@string/main_road"-->
+<!--        android:checked="true"-->
+<!--        android:visibility="invisible" />-->
+
+<!--    <CheckBox-->
+<!--        android:id="@+id/noEntry"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginTop="100dp"-->
+<!--        android:text="@string/no_entry"-->
+<!--        android:checked="true"-->
+<!--        android:visibility="invisible" />-->
+
+<!--    <CheckBox-->
+<!--        android:id="@+id/noStopping"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginTop="125dp"-->
+<!--        android:text="@string/no_stopping"-->
+<!--        android:checked="true"-->
+<!--        android:visibility="invisible" />-->
+
+<!--    <CheckBox-->
+<!--        android:id="@+id/parking"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginTop="150dp"-->
+<!--        android:text="@string/parking"-->
+<!--        android:checked="true"-->
+<!--        android:visibility="invisible" />-->
+
+<!--    <CheckBox-->
+<!--        android:id="@+id/roadCross"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginTop="175dp"-->
+<!--        android:text="@string/road_cross"-->
+<!--        android:checked="true"-->
+<!--        android:visibility="invisible" />-->
 
 </RelativeLayout>

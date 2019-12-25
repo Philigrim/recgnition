@@ -30,4 +30,12 @@
     <string name="web_client">426288028700-caudn69d2mjfa66k6a5h8nerq0sjahos.apps.googleusercontent.com</string>
     <string name="com_auth0_client_id">rPO5OZsHrBYoXNYC1G5P6jRGHwwnYPHg</string>
     <string name="com_auth0_domain">dev-vw11m1fa.eu.auth0.com</string>
+    <string name="road_cross">ROAD CROSS</string>
+    <string name="parking">PARKING</string>
+    <string name="no_stopping">NO STOPPING</string>
+    <string name="no_entry">NO ENTRY</string>
+    <string name="main_road">MAIN ROAD</string>
+    <string name="hump">HUMP</string>
+    <string name="give_way">GIVE WAY</string>
+    <string name="bus_stop">BUS STOP</string>
 </resources>

@@ -9,16 +9,12 @@ public class Sign {
     private int sign_id;
     private String sign_name;
     private Point point;
-    private String unique_sign_id = "Source";
-    private String unique_sign_layer_id = "Layer";
 
-    Sign(int category_id, int sign_id, String sign_name, Point point, int unique_sign_id, int unique_sign_layer_id){
+    Sign(int category_id, int sign_id, String sign_name, Point point){
         this.category_id = category_id;
         this.sign_id = sign_id;
         this.sign_name = sign_name;
         this.point = point;
-        this.unique_sign_id += unique_sign_id;
-        this.unique_sign_layer_id += unique_sign_layer_id;
     }
 
     Sign(String sign_name){
@@ -69,13 +65,5 @@ public class Sign {
 
     public void setPoint(Point point){
         this.point = point;
-    }
-
-    public String getUnique_sign_id() {
-        return unique_sign_id;
-    }
-
-    public String getUnique_sign_layer_id() {
-        return unique_sign_layer_id;
     }
 }
