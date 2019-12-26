@@ -59,6 +59,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -87,11 +88,9 @@ public class MapActivity extends AppCompatActivity implements
     private RequestQueue requestQueue;
     private String getURL = "http://193.219.91.103:9560/atvaizdavimas";
 
-    // Variables needed to add the location engine
     private LocationEngine locationEngine;
     private long DEFAULT_INTERVAL_IN_MILLISECONDS = 1000L;
     private long DEFAULT_MAX_WAIT_TIME = DEFAULT_INTERVAL_IN_MILLISECONDS * 5;
-    // Variables needed to listen to location updates
     private MapActivityLocationCallback callback = new MapActivityLocationCallback(this);
     SymbolManager sm;
 
@@ -100,11 +99,8 @@ public class MapActivity extends AppCompatActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-// Mapbox access token is configured here. This needs to be called either in your application
-// object or in the same activity which contains the mapview.
         Mapbox.getInstance(this, getString(R.string.mapbox_access_token));
 
-// This contains the MapView in XML and needs to be called after the access token is configured.
         setContentView(R.layout.activity_map);
 
         signPlaceHolders[0] = findViewById(R.id.image1);
@@ -183,22 +179,24 @@ public class MapActivity extends AppCompatActivity implements
 
     private void addMarkers() {
         String data = "";
-        String name = signList.get(0).getSign_name();
+        int group = signList.get(0).getGroup();
+        double latitude = 0;
+        double longitude = 0;
 
         for (Sign sign : signList) {
-            if (name.equals(sign.getSign_name())) {
+            if (group == sign.getGroup()) {
                 data += sign.getSign_name() + ";";
+                latitude = sign.getPoint().getY();
+                longitude = sign.getPoint().getX();
             } else {
                 sm.create(new SymbolOptions()
-                        .withLatLng(new LatLng(sign.getPoint().getY(), sign.getPoint().getX()))
+                        .withLatLng(new LatLng(latitude, longitude))
                         .withIconImage(MARKER)
                         .withIconSize(1f)
                         .withTextAnchor(data));
 
-                Log.println(Log.ERROR, "DATA", data);
-
                 data = sign.getSign_name() + ";";
-                name = sign.getSign_name();
+                group = sign.getGroup();
             }
         }
 
@@ -239,28 +237,21 @@ public class MapActivity extends AppCompatActivity implements
      */
     @SuppressWarnings( {"MissingPermission"})
     private void enableLocationComponent(@NonNull Style loadedMapStyle) {
-// Check if permissions are enabled and if not request
         if (PermissionsManager.areLocationPermissionsGranted(this)) {
 
-// Get an instance of the component
             LocationComponent locationComponent = mapboxMap.getLocationComponent();
 
-// Set the LocationComponent activation options
             LocationComponentActivationOptions locationComponentActivationOptions =
                     LocationComponentActivationOptions.builder(this, loadedMapStyle)
                             .useDefaultLocationEngine(false)
                             .build();
 
-// Activate with the LocationComponentActivationOptions object
             locationComponent.activateLocationComponent(locationComponentActivationOptions);
 
-// Enable to make component visible
             locationComponent.setLocationComponentEnabled(true);
 
-// Set the component's camera mode
             locationComponent.setCameraMode(CameraMode.TRACKING);
 
-// Set the component's render mode
             locationComponent.setRenderMode(RenderMode.COMPASS);
 
             initLocationEngine();
@@ -315,7 +306,7 @@ public class MapActivity extends AppCompatActivity implements
                 new Response.Listener<JSONArray>(){
                     @Override
                     public void onResponse(JSONArray response){
-                        Log.e("Rest  worked", response.toString());
+                        Log.e("REST SUCCESS", response.toString());
 
                         JSONObject object;
 
@@ -333,17 +324,20 @@ public class MapActivity extends AppCompatActivity implements
                                 Sign sign = new Sign(object.getInt("kat_id"),
                                         object.getInt("zen_id"),
                                         object.getString("zen_pav"),
-                                        point);
+                                        point,
+                                        object.getInt("bendras_grupes_id"));
 
                                 signList.add(sign);
                             }
+
+                            Collections.sort(signList);
 
                             addMarkers();
 
                             cancelAllRequests("getRequest");
 
                         }catch(JSONException e){
-                            Log.e("erroriukas toks", e.toString());
+                            Log.e("JSON ERROR", e.toString());
                         }
                     }
                 },
@@ -351,7 +345,7 @@ public class MapActivity extends AppCompatActivity implements
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Log.e("Rest Response", error.toString());
+                        Log.e("GET ERROR", error.toString());
                     }
                 });
 

@@ -137,19 +137,13 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
   private BorderedText borderedText;
 
-  //Musu kintamieji.
-
-  private MapActivity mapActivity = new MapActivity();
-
-  private MapActivityLocationCallback callback = new MapActivityLocationCallback(mapActivity);
-
   private RequestQueue requestQueue;
 
   private HashMap<String, String> signHashMap = Sign.SignNameIdHashMap();
 
   private String postURL = "http://193.219.91.103:9560/zenklu_log";
 
-  private FusedLocationProviderClient fusedLocationProviderClient;
+  private int srid = 4326;
 
   @Override
   public void onPreviewSizeChosen(final Size size, final int rotation) {
@@ -319,9 +313,10 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             final List<Classifier.Recognition> mappedRecognitions =
                 new LinkedList<Classifier.Recognition>();
 
+            String currentSign = "";
+
             for (final Classifier.Recognition result : results) {
               final RectF location = result.getLocation();
-              String currentSign = "";
               if (location != null && result.getConfidence() >= minimumConfidence && !result.getTitle().equals(currentSign)) {
                 canvas.drawRect(location, paint);
 
@@ -330,10 +325,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 mappedRecognitions.add(result);
 
                 currentSign = result.getTitle();
-
-                Log.e("NIGGAWHOKNOWS", currentSign);
-
-                Log.e("whydont", "bleee");
 
                 SendDataToRest((float)sharedLocation.getLatitude(), (float)sharedLocation.getLongitude(), currentSign);
               }
@@ -355,9 +346,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
         Geometry geometry = point;
 
-        geometry.setSrid(4326);
-
-        Log.e("GEOMETRY", " " + geometry);
+        geometry.setSrid(srid);
 
         try{
           postparams.put("zen_id", signHashMap.get(signName));
@@ -367,24 +356,23 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
           postparams.put("koordinate", geometry);
           postparams.put("laikozyma", null);
         }catch(JSONException j){
-          Log.e("blabla", j.toString());
+          Log.e("JSON ERROR", j.toString());
         }
 
         JsonObjectRequest jsonObjReq = new JsonObjectRequest(Request.Method.POST,
                 postURL, postparams, new Response.Listener<JSONObject>() {
           @Override
           public void onResponse(JSONObject response) {
-
+            Log.println(Log.INFO, "POST SUCCESS", response.toString());
           }
         },
-                new Response.ErrorListener() {
-                  @Override
-                  public void onErrorResponse(VolleyError error) {
+          new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+              Log.println(Log.ERROR, "POST FAIL", error.toString());
+            }
+          });
 
-                  }
-                });
-
-      // Adding the request to the queue along with a unique string tag
         addToRequestQueue(jsonObjReq, "postRequest");
   }
 

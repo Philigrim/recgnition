@@ -2,23 +2,22 @@ package org.tensorflow.demo;
 
 import org.postgis.Point;
 
+import java.util.Collections;
 import java.util.HashMap;
 
-public class Sign {
+public class Sign implements Comparable {
     private int category_id;
     private int sign_id;
     private String sign_name;
     private Point point;
+    private int group;
 
-    Sign(int category_id, int sign_id, String sign_name, Point point){
+    Sign(int category_id, int sign_id, String sign_name, Point point, int group){
         this.category_id = category_id;
         this.sign_id = sign_id;
         this.sign_name = sign_name;
         this.point = point;
-    }
-
-    Sign(String sign_name){
-        this.sign_name = sign_name;
+        this.group = group;
     }
 
     public static HashMap<String, String> SignNameIdHashMap(){
@@ -33,6 +32,16 @@ public class Sign {
         signHashMap.put("Stovejimo vieta", "528");
 
         return signHashMap;
+    }
+
+    @Override
+    public int compareTo(Object sign) {
+        int compareage=((Sign)sign).getGroup();
+        /* For Ascending order*/
+        return this.group-compareage;
+
+        /* For Descending order do like this */
+        //return compareage-this.studentage;
     }
 
     public int getCategory_id() {
@@ -66,4 +75,8 @@ public class Sign {
     public void setPoint(Point point){
         this.point = point;
     }
+
+    public int getGroup() { return group; }
+
+    public void setGroup(int group) { this.group = group; }
 }
