@@ -6,7 +6,6 @@ import android.content.res.AssetManager;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.location.Location;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -22,16 +21,12 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.mapbox.android.core.location.LocationEngine;
 import com.mapbox.android.core.location.LocationEngineProvider;
 import com.mapbox.android.core.location.LocationEngineRequest;
 import com.mapbox.android.core.permissions.PermissionsListener;
 import com.mapbox.android.core.permissions.PermissionsManager;
-import com.mapbox.geojson.Feature;
-import com.mapbox.geojson.FeatureCollection;
-import org.postgis.Geometry;
 import org.postgis.Point;
 
 import com.mapbox.mapboxsdk.Mapbox;
@@ -48,8 +43,6 @@ import com.mapbox.mapboxsdk.plugins.annotation.OnSymbolClickListener;
 import com.mapbox.mapboxsdk.plugins.annotation.Symbol;
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager;
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolOptions;
-import com.mapbox.mapboxsdk.style.layers.SymbolLayer;
-import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -57,15 +50,10 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-
-import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconAllowOverlap;
-import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconIgnorePlacement;
-import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconImage;
 
 /**
  * Use the LocationComponent to easily add a device location "puck" to a Mapbox map.
@@ -92,7 +80,7 @@ public class MapActivity extends AppCompatActivity implements
     private long DEFAULT_INTERVAL_IN_MILLISECONDS = 1000L;
     private long DEFAULT_MAX_WAIT_TIME = DEFAULT_INTERVAL_IN_MILLISECONDS * 5;
     private MapActivityLocationCallback callback = new MapActivityLocationCallback(this);
-    SymbolManager sm;
+    private SymbolManager sm;
 
 
     @Override
@@ -114,6 +102,7 @@ public class MapActivity extends AppCompatActivity implements
 
         buttonToCamera = findViewById(R.id.cameraButton);
         buttonToCamera.setOnClickListener(onToCameraPressed);
+
         mapView = findViewById(R.id.mapView);
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
@@ -189,47 +178,51 @@ public class MapActivity extends AppCompatActivity implements
                 latitude = sign.getPoint().getY();
                 longitude = sign.getPoint().getX();
             } else {
-                sm.create(new SymbolOptions()
-                        .withLatLng(new LatLng(latitude, longitude))
-                        .withIconImage(MARKER)
-                        .withIconSize(1f)
-                        .withTextAnchor(data));
+                CreateSymbol(latitude, longitude, data);
 
                 data = sign.getSign_name() + ";";
                 group = sign.getGroup();
             }
         }
 
-        sm.create(new SymbolOptions()
-                .withLatLng(new LatLng(signList.get(signList.size() - 1).getPoint().getY(), signList.get(signList.size() - 1).getPoint().getX()))
-                .withIconImage(MARKER)
-                .withIconSize(1f)
-                .withTextAnchor(data));
+        CreateSymbol(signList.get(signList.size() - 1).getPoint().y, signList.get(signList.size() - 1).getPoint().x, data);
 
         sm.addClickListener(new OnSymbolClickListener() {
             @Override
             public void onAnnotationClick(Symbol symbol) {
-                if(tempSymbol == symbol){
-                    for (ImageView view : signPlaceHolders) {
-                        view.setImageDrawable(null);
-                    }
-                    tempSymbol = null;
-                }else{
-                    tempSymbol = symbol;
-                    String[] signNames = symbol.getTextAnchor().split(";");
-                    int index = 0;
-
-                    for (ImageView view : signPlaceHolders) {
-                        if(index < signNames.length){
-                            view.setImageDrawable(signNameToSignDrawable.get(signNames[index]));
-                            index++;
-                        }else{
-                            view.setImageDrawable(null);
-                        }
-                    }
-                }
+                ShowSigns(symbol);
             }
         });
+    }
+
+    private void CreateSymbol(double lat, double lng, String d){
+        sm.create(new SymbolOptions()
+                .withLatLng(new LatLng(lat, lng))
+                .withIconImage(MARKER)
+                .withIconSize(1f)
+                .withTextAnchor(d));
+    }
+
+    private void ShowSigns(Symbol s){
+        if(tempSymbol == s){
+            for (ImageView view : signPlaceHolders) {
+                view.setImageDrawable(null);
+            }
+            tempSymbol = null;
+        }else{
+            tempSymbol = s;
+            String[] signNames = s.getTextAnchor().split(";");
+            int index = 0;
+
+            for (ImageView view : signPlaceHolders) {
+                if(index < signNames.length){
+                    view.setImageDrawable(signNameToSignDrawable.get(signNames[index]));
+                    index++;
+                }else{
+                    view.setImageDrawable(null);
+                }
+            }
+        }
     }
 
     /**
