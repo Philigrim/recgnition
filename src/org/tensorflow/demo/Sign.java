@@ -12,6 +12,11 @@ public class Sign implements Comparable {
     private Point point;
     private int group;
 
+    @Override
+    public String toString(){
+        return this.category_id + " " + this.sign_id + " " + this.sign_name + " " + this.point + " " + this.group;
+    }
+
     Sign(int category_id, int sign_id, String sign_name, Point point, int group){
         this.category_id = category_id;
         this.sign_id = sign_id;
@@ -37,35 +42,11 @@ public class Sign implements Comparable {
     @Override
     public int compareTo(Object sign) {
         int compareage=((Sign)sign).getGroup();
-        /* For Ascending order*/
         return this.group-compareage;
-
-        /* For Descending order do like this */
-        //return compareage-this.studentage;
-    }
-
-    public int getCategory_id() {
-        return category_id;
-    }
-
-    public void setCategory_id(int category_id) {
-        this.category_id = category_id;
-    }
-
-    public int getSign_id() {
-        return sign_id;
-    }
-
-    public void setSign_id(int sign_id) {
-        this.sign_id = sign_id;
     }
 
     public String getSign_name() {
         return sign_name;
-    }
-
-    public void setSign_name(String sign_name) {
-        this.sign_name = sign_name;
     }
 
     public Point getPoint(){
@@ -77,6 +58,4 @@ public class Sign implements Comparable {
     }
 
     public int getGroup() { return group; }
-
-    public void setGroup(int group) { this.group = group; }
 }

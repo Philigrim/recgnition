@@ -68,15 +68,7 @@
             android:layout_marginBottom="75dp"
             android:padding="10dp" />
 
-        <ImageView
-            android:id="@+id/image8"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="350dp"
-            android:layout_marginBottom="75dp"
-            android:padding="10dp" />
-
-<!--        <Button-->
+        <!--        <Button-->
 <!--            android:id="@+id/selectSign"-->
 <!--            android:layout_width="wrap_content"-->
 <!--            android:layout_height="wrap_content"-->
@@ -86,6 +78,13 @@
 <!--            app:layout_constraintBottom_toBottomOf="@id/mapView"-->
 <!--            app:layout_constraintEnd_toEndOf="@id/mapView"-->
 <!--            app:layout_constraintStart_toStartOf="@id/mapView" />-->
+
+        <ImageView
+            android:id="@+id/image8"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="50dp"
+            android:padding="10dp" />
 
         <Button
             android:id="@+id/cameraButton"

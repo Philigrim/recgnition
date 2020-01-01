@@ -66,6 +66,7 @@ public class MapActivity extends AppCompatActivity implements
 
     private ArrayList<Sign> signList = new ArrayList<Sign>();
     private HashMap<String, Drawable> signNameToSignDrawable = new HashMap<>();
+    private HashMap<Symbol, String> symbolToData = new HashMap<>();
     private ImageView[] signPlaceHolders  = new ImageView[8];
 
     private PermissionsManager permissionsManager;
@@ -173,15 +174,19 @@ public class MapActivity extends AppCompatActivity implements
         double longitude = 0;
 
         for (Sign sign : signList) {
+            Log.println(Log.ERROR, "Zenklas: ", sign.toString());
             if (group == sign.getGroup()) {
                 data += sign.getSign_name() + ";";
                 latitude = sign.getPoint().getY();
                 longitude = sign.getPoint().getX();
             } else {
                 CreateSymbol(latitude, longitude, data);
+                Log.println(Log.ERROR, "simbolis: ", "Latitude: " + latitude + " Longitude: " + longitude);
 
                 data = sign.getSign_name() + ";";
                 group = sign.getGroup();
+                latitude = sign.getPoint().getY();
+                longitude = sign.getPoint().getX();
             }
         }
 
@@ -196,11 +201,12 @@ public class MapActivity extends AppCompatActivity implements
     }
 
     private void CreateSymbol(double lat, double lng, String d){
-        sm.create(new SymbolOptions()
-                .withLatLng(new LatLng(lat, lng))
-                .withIconImage(MARKER)
-                .withIconSize(1f)
-                .withTextAnchor(d));
+        Symbol symbol = sm.create(new SymbolOptions()
+                            .withLatLng(new LatLng(lat, lng))
+                            .withIconImage(MARKER)
+                            .withIconSize(1f));
+
+        symbolToData.put(symbol, d);
     }
 
     private void ShowSigns(Symbol s){
@@ -211,7 +217,7 @@ public class MapActivity extends AppCompatActivity implements
             tempSymbol = null;
         }else{
             tempSymbol = s;
-            String[] signNames = s.getTextAnchor().split(";");
+            String[] signNames = symbolToData.get(tempSymbol).split(";");
             int index = 0;
 
             for (ImageView view : signPlaceHolders) {
@@ -302,35 +308,36 @@ public class MapActivity extends AppCompatActivity implements
                         Log.e("REST SUCCESS", response.toString());
 
                         JSONObject object;
+                        if(response.length() > 0){
+                            try{
+                                Point point = new Point();
+                                for(int i = 0; i < response.length(); i++){
+                                    object = response.getJSONObject(i);
 
-                        try{
-                            Point point = new Point();
-                            for(int i = 0; i < response.length(); i++){
-                                object = response.getJSONObject(i);
+                                    try{
+                                        point = new Point(object.getString("st_astext"));
+                                    }catch(SQLException e){
+                                        Log.e("POINTAS", e.toString());
+                                    }
 
-                                try{
-                                    point = new Point(object.getString("st_astext"));
-                                }catch(SQLException e){
-                                    Log.e("POINTAS", e.toString());
+                                    Sign sign = new Sign(object.getInt("kat_id"),
+                                            object.getInt("zen_id"),
+                                            object.getString("zen_pav"),
+                                            point,
+                                            object.getInt("grupe_atvaizdavimui"));
+
+                                    signList.add(sign);
                                 }
 
-                                Sign sign = new Sign(object.getInt("kat_id"),
-                                        object.getInt("zen_id"),
-                                        object.getString("zen_pav"),
-                                        point,
-                                        object.getInt("bendras_grupes_id"));
+                                Collections.sort(signList);
 
-                                signList.add(sign);
+                                addMarkers();
+
+                                cancelAllRequests("getRequest");
+
+                            }catch(JSONException e){
+                                Log.e("JSON ERROR", e.toString());
                             }
-
-                            Collections.sort(signList);
-
-                            addMarkers();
-
-                            cancelAllRequests("getRequest");
-
-                        }catch(JSONException e){
-                            Log.e("JSON ERROR", e.toString());
                         }
                     }
                 },

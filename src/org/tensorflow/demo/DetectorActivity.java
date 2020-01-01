@@ -137,6 +137,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
   private BorderedText borderedText;
 
+  private String currentSign = "";
+
   private RequestQueue requestQueue;
 
   private HashMap<String, String> signHashMap = Sign.SignNameIdHashMap();
@@ -295,38 +297,39 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             final Paint paint = new Paint();
             paint.setColor(Color.RED);
             paint.setStyle(Style.STROKE);
-            paint.setStrokeWidth(2.0f);
+            paint.setStrokeWidth(2f);
 
             float minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
-            switch (MODE) {
-              case TF_OD_API:
-                minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
-                break;
-              case MULTIBOX:
-                minimumConfidence = MINIMUM_CONFIDENCE_MULTIBOX;
-                break;
-              case YOLO:
-                minimumConfidence = MINIMUM_CONFIDENCE_YOLO;
-                break;
-            }
+//            switch (MODE) {
+//              case TF_OD_API:
+//                minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
+//                break;
+//              case MULTIBOX:
+//                minimumConfidence = MINIMUM_CONFIDENCE_MULTIBOX;
+//                break;
+//              case YOLO:
+//                minimumConfidence = MINIMUM_CONFIDENCE_YOLO;
+//                break;
+//            }
 
             final List<Classifier.Recognition> mappedRecognitions =
                 new LinkedList<Classifier.Recognition>();
 
-            String currentSign = "";
-
             for (final Classifier.Recognition result : results) {
               final RectF location = result.getLocation();
-              if (location != null && result.getConfidence() >= minimumConfidence && !result.getTitle().equals(currentSign)) {
+              if (location != null && result.getConfidence() >= minimumConfidence) {
                 canvas.drawRect(location, paint);
 
                 cropToFrameTransform.mapRect(location);
                 result.setLocation(location);
                 mappedRecognitions.add(result);
 
-                currentSign = result.getTitle();
+                if(!result.getTitle().equals(currentSign)){
+                  currentSign = result.getTitle();
+                  SendDataToRest((float)sharedLocation.getLatitude(), (float)sharedLocation.getLongitude(), currentSign);
+                }
 
-                SendDataToRest((float)sharedLocation.getLatitude(), (float)sharedLocation.getLongitude(), currentSign);
+                Log.println(Log.ERROR, "DETECTINA", "detectina");
               }
             }
 
@@ -348,10 +351,14 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
         geometry.setSrid(srid);
 
+        Log.println(Log.ERROR, "JESUSCHRIST", signHashMap.get(signName));
+
+//    {"zen_id": "332","tinkamumas":true,"var_id":null,"grupes_id":null,"koordinate":"SRID=4326;POINT(52.729001 25.268257)","laikozyma":null}'
+
         try{
           postparams.put("zen_id", signHashMap.get(signName));
           postparams.put("tinkamumas", true);
-          postparams.put("var_id", 1);
+          postparams.put("var_id", null);
           postparams.put("grupes_id", null);
           postparams.put("koordinate", geometry);
           postparams.put("laikozyma", null);
@@ -364,12 +371,14 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
           @Override
           public void onResponse(JSONObject response) {
             Log.println(Log.INFO, "POST SUCCESS", response.toString());
+            cancelAllRequests("postRequest");
           }
         },
           new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
               Log.println(Log.ERROR, "POST FAIL", error.toString());
+              cancelAllRequests("postRequest");
             }
           });
 
