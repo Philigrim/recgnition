@@ -44,6 +44,8 @@ import com.android.volley.toolbox.Volley;
 import com.google.android.gms.location.FusedLocationProviderClient;
 
 import java.io.IOException;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -68,47 +70,17 @@ import org.tensorflow.demo.R; // Explicit import needed for internal Google buil
 public class DetectorActivity extends CameraActivity implements OnImageAvailableListener {
   private static final Logger LOGGER = new Logger();
 
-  // Configuration values for the prepackaged multibox model.
-  private static final int MB_INPUT_SIZE = 224;
-  private static final int MB_IMAGE_MEAN = 128;
-  private static final float MB_IMAGE_STD = 128;
-  private static final String MB_INPUT_NAME = "ResizeBilinear";
-  private static final String MB_OUTPUT_LOCATIONS_NAME = "output_locations/Reshape";
-  private static final String MB_OUTPUT_SCORES_NAME = "output_scores/Reshape";
-  private static final String MB_MODEL_ = "file:///android_asset/multibox_model.pb";
-  private static final String MB_LOCATION_ =
-      "file:///android_asset/multibox_location_priors.txt";
-
   private static final int TF_OD_API_INPUT_SIZE = 300;
   private static final String TF_OD_API_MODEL_ =
       "file:///android_asset/frozen_inference_graph.pb";
   private static final String TF_OD_API_LABELS_ = "file:///android_asset/labels_list.txt";
 
-  // Configuration values for tiny-yolo-voc. Note that the graph is not included with TensorFlow and
-  // must be manually placed in the assets/ directory by the user.
-  // Graphs and models downloaded from http://pjreddie.com/darknet/yolo/ may be converted e.g. via
-  // DarkFlow (https://github.com/thtrieu/darkflow). Sample command:
-  // ./flow --model cfg/tiny-yolo-voc.cfg --load bin/tiny-yolo-voc.weights --savepb --verbalise
-  private static final String YOLO_MODEL_ = "file:///android_asset/graph-tiny-yolo-voc.pb";
-  private static final int YOLO_INPUT_SIZE = 416;
-  private static final String YOLO_INPUT_NAME = "input";
-  private static final String YOLO_OUTPUT_NAMES = "output";
-  private static final int YOLO_BLOCK_SIZE = 32;
-
   // Which detection model to use: by default uses Tensorflow Object Detection API frozen
   // checkpoints.  Optionally use legacy Multibox (trained using an older version of the API)
   // or YOLO.
-  private enum DetectorMode {
-    TF_OD_API, MULTIBOX, YOLO;
-  }
-  private static final DetectorMode MODE = DetectorMode.TF_OD_API;
 
   // Minimum detection confidence to track a detection.
-  private static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.6f;
-  private static final float MINIMUM_CONFIDENCE_MULTIBOX = 0.1f;
-  private static final float MINIMUM_CONFIDENCE_YOLO = 0.25f;
-
-  private static final boolean MAINTAIN_ASPECT = MODE == DetectorMode.YOLO;
+  private static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.8f;
 
   private static final Size DESIRED_PREVIEW_SIZE = new Size(640, 480);
 
@@ -183,7 +155,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         ImageUtils.getTransformationMatrix(
             previewWidth, previewHeight,
             cropSize, cropSize,
-            sensorOrientation, MAINTAIN_ASPECT);
+            sensorOrientation, false);
 
     cropToFrameTransform = new Matrix();
     frameToCropTransform.invert(cropToFrameTransform);
@@ -299,25 +271,12 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             paint.setStyle(Style.STROKE);
             paint.setStrokeWidth(2f);
 
-            float minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
-//            switch (MODE) {
-//              case TF_OD_API:
-//                minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
-//                break;
-//              case MULTIBOX:
-//                minimumConfidence = MINIMUM_CONFIDENCE_MULTIBOX;
-//                break;
-//              case YOLO:
-//                minimumConfidence = MINIMUM_CONFIDENCE_YOLO;
-//                break;
-//            }
-
             final List<Classifier.Recognition> mappedRecognitions =
                 new LinkedList<Classifier.Recognition>();
 
             for (final Classifier.Recognition result : results) {
               final RectF location = result.getLocation();
-              if (location != null && result.getConfidence() >= minimumConfidence) {
+              if (location != null && result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API) {
                 canvas.drawRect(location, paint);
 
                 cropToFrameTransform.mapRect(location);
@@ -347,21 +306,20 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
         Point point = new Point(longitude, latitude);
 
+        String requestTag = "requestTag" + signName;
+
         Geometry geometry = point;
+
+        Date currentTime = Calendar.getInstance().getTime();
 
         geometry.setSrid(srid);
 
-        Log.println(Log.ERROR, "JESUSCHRIST", signHashMap.get(signName));
-
-//    {"zen_id": "332","tinkamumas":true,"var_id":null,"grupes_id":null,"koordinate":"SRID=4326;POINT(52.729001 25.268257)","laikozyma":null}'
-
         try{
           postparams.put("zen_id", signHashMap.get(signName));
-          postparams.put("tinkamumas", true);
-          postparams.put("var_id", null);
           postparams.put("grupes_id", null);
           postparams.put("koordinate", geometry);
-          postparams.put("laikozyma", null);
+          postparams.put("laikozyma", currentTime);
+          postparams.put("var_id", null);
         }catch(JSONException j){
           Log.e("JSON ERROR", j.toString());
         }
@@ -371,18 +329,18 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
           @Override
           public void onResponse(JSONObject response) {
             Log.println(Log.INFO, "POST SUCCESS", response.toString());
-            cancelAllRequests("postRequest");
+            //cancelAllRequests(requestTag);
           }
         },
           new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
               Log.println(Log.ERROR, "POST FAIL", error.toString());
-              cancelAllRequests("postRequest");
+              //cancelAllRequests(requestTag);
             }
           });
 
-        addToRequestQueue(jsonObjReq, "postRequest");
+        addToRequestQueue(jsonObjReq, requestTag);
   }
 
   public RequestQueue getRequestQueue() {

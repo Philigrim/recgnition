@@ -28,7 +28,7 @@ public class Sign implements Comparable {
     public static HashMap<String, String> SignNameIdHashMap(){
         HashMap<String, String> signHashMap = new HashMap<String, String>();
         signHashMap.put("Greicio mazinimo priemone", "151");
-        signHashMap.put("Stotele", "730");
+        signHashMap.put("Stotele", "548");
         signHashMap.put("Pesciuju pereja", "533");
         signHashMap.put("Ivaziuoti draudziama", "301");
         signHashMap.put("Duoti kelia", "203");

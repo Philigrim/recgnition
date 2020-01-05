@@ -124,7 +124,6 @@ public class RecordActivity extends Activity implements LocationListener {
                     durationChronometer.start();
 
                     //Release Camera before MediaRecorder start
-                    releaseCamera();
 
                     if(!prepareMediaRecorder()){
                         Toast.makeText(getApplicationContext(), "Fail in prepareMediaRecorder()!\n - Ended -", Toast.LENGTH_LONG).show();
@@ -190,8 +189,6 @@ public class RecordActivity extends Activity implements LocationListener {
 
 
     private boolean prepareMediaRecorder(){
-        myCamera = getCameraInstance();
-        
         myCamera.setDisplayOrientation(90); // preview while recording
         
         mediaRecorder = new MediaRecorder();

@@ -64,7 +64,7 @@ public class MapActivity extends AppCompatActivity implements
     private static final String MARKER = "marker-icon";
     private Symbol tempSymbol = null;
 
-    private ArrayList<Sign> signList = new ArrayList<Sign>();
+    private ArrayList<Sign> signList = new ArrayList<>();
     private HashMap<String, Drawable> signNameToSignDrawable = new HashMap<>();
     private HashMap<Symbol, String> symbolToData = new HashMap<>();
     private ImageView[] signPlaceHolders  = new ImageView[8];
@@ -174,14 +174,12 @@ public class MapActivity extends AppCompatActivity implements
         double longitude = 0;
 
         for (Sign sign : signList) {
-            Log.println(Log.ERROR, "Zenklas: ", sign.toString());
             if (group == sign.getGroup()) {
                 data += sign.getSign_name() + ";";
                 latitude = sign.getPoint().getY();
                 longitude = sign.getPoint().getX();
             } else {
                 CreateSymbol(latitude, longitude, data);
-                Log.println(Log.ERROR, "simbolis: ", "Latitude: " + latitude + " Longitude: " + longitude);
 
                 data = sign.getSign_name() + ";";
                 group = sign.getGroup();
@@ -204,7 +202,7 @@ public class MapActivity extends AppCompatActivity implements
         Symbol symbol = sm.create(new SymbolOptions()
                             .withLatLng(new LatLng(lat, lng))
                             .withIconImage(MARKER)
-                            .withIconSize(1f));
+                            .withIconSize(0.8f));
 
         symbolToData.put(symbol, d);
     }
