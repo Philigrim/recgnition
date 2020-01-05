@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.res.AssetManager;
 import android.graphics.BitmapFactory;
+import android.graphics.PointF;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -62,6 +63,7 @@ public class MapActivity extends AppCompatActivity implements
         OnMapReadyCallback, PermissionsListener {
 
     private static final String MARKER = "marker-icon";
+    private static final String SECOND_MARKER = "second-marker-icon";
     private Symbol tempSymbol = null;
 
     private ArrayList<Sign> signList = new ArrayList<>();
@@ -136,6 +138,8 @@ public class MapActivity extends AppCompatActivity implements
                         /* Image: An image is loaded. */
                         style.addImage(MARKER, BitmapFactory.decodeResource(
                                 MapActivity.this.getResources(), R.drawable.mapbox_marker_icon_default));
+                        style.addImage(SECOND_MARKER, BitmapFactory.decodeResource(
+                                MapActivity.this.getResources(), R.drawable.placeholder));
                         sm = new SymbolManager(mapView, mapboxMap, style);
                         sm.setIconAllowOverlap(true);
                         sm.setIconIgnorePlacement(true);
@@ -194,6 +198,7 @@ public class MapActivity extends AppCompatActivity implements
             @Override
             public void onAnnotationClick(Symbol symbol) {
                 ShowSigns(symbol);
+                Log.println(Log.ERROR, "TEMPAS: ", tempSymbol + " ");
             }
         });
     }
@@ -212,14 +217,33 @@ public class MapActivity extends AppCompatActivity implements
             for (ImageView view : signPlaceHolders) {
                 view.setImageDrawable(null);
             }
+
+            sm.update(SwapSymbolIcon(MARKER, s, 0, 0));
             tempSymbol = null;
         }else{
-            tempSymbol = s;
-            String[] signNames = symbolToData.get(tempSymbol).split(";");
+            if(tempSymbol != null){
+                String data = symbolToData.remove(tempSymbol);
+                tempSymbol.setIconImage(MARKER);
+                tempSymbol.setIconOffset(new PointF(0f, 0f));
+                symbolToData.put(tempSymbol, data);
+                Log.println(Log.ERROR, "blablabla: ", tempSymbol + "");
+                sm.update(tempSymbol);
+                tempSymbol = null;
+            }
+
+            sm.update(SwapSymbolIcon(SECOND_MARKER, s, 0f, -12.5f));
+            Log.println(Log.ERROR, "Symbol else: ", tempSymbol + "");
+
+            String[] signNames = null;
+
+            if(symbolToData.get(s) != null){
+                signNames = symbolToData.get(s).split(";");
+            }
+
             int index = 0;
 
             for (ImageView view : signPlaceHolders) {
-                if(index < signNames.length){
+                if(signNames != null && index < signNames.length){
                     view.setImageDrawable(signNameToSignDrawable.get(signNames[index]));
                     index++;
                 }else{
@@ -227,6 +251,17 @@ public class MapActivity extends AppCompatActivity implements
                 }
             }
         }
+    }
+
+    private Symbol SwapSymbolIcon(String iconName, Symbol s, float x, float y){
+        Log.println(Log.ERROR, "s: ", s + "");
+        tempSymbol = s;
+        String data = symbolToData.remove(s);
+        Log.println(Log.ERROR, "data: ", data + "");
+        tempSymbol.setIconImage(iconName);
+        tempSymbol.setIconOffset(new PointF(x, y));
+        symbolToData.put(tempSymbol, data);
+        return tempSymbol;
     }
 
     /**
