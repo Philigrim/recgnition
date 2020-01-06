@@ -20,7 +20,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#000000"
-    tools:context="org.tensorflow.demo.DetectorActivity"
+    tools:context="org.tensorflow.demo.recognition.DetectorActivity"
     android:paddingBottom="40dp">
 
     <Button
@@ -36,17 +36,8 @@
         android:id="@+id/recordActivityButton"
         android:layout_width="88dp"
         android:layout_height="wrap_content"
-        android:text="Record"
         android:layout_alignParentBottom="true"
-        android:layout_centerInParent="true"/>
-
-    <Button
-        android:id="@+id/profileButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Profile"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginEnd="25dp"/>
+        android:layout_centerInParent="true"
+        android:text="Record" />
 
 </RelativeLayout>

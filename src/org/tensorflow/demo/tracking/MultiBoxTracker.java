@@ -27,11 +27,11 @@ import android.graphics.RectF;
 import android.text.TextUtils;
 import android.util.Pair;
 import android.util.TypedValue;
-import android.widget.Toast;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import org.tensorflow.demo.Classifier.Recognition;
+import org.tensorflow.demo.recognition.Classifier.Recognition;
 import org.tensorflow.demo.env.BorderedText;
 import org.tensorflow.demo.env.ImageUtils;
 import org.tensorflow.demo.env.Logger;

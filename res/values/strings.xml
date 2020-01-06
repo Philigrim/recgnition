@@ -14,7 +14,6 @@
  limitations under the License.
 -->
 <resources>
-
     <string name="app_name">TensorFlow</string>
     <string name="activity_name_detection">Zenklu valdovai</string>
     <string name="description_info">Info</string>

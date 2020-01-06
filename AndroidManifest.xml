@@ -27,25 +27,23 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@drawable/ic_launcher"
+        android:icon="@drawable/main_road"
         android:label="Zenklu valdovai"
         android:theme="@style/Theme.AppCompat.Light"
         android:networkSecurityConfig="@xml/network_security_config">
 
-        <activity android:name=".TestCameraActivity" />
-
         <activity
-            android:name=".MapActivity"
+            android:name=".map.MapActivity"
             android:label="Zenklu valdovai"
             android:screenOrientation="portrait"/>
 
         <activity
-            android:name=".RecordActivity"
+            android:name=".Record.RecordActivity"
             android:label="Zenklu valdovai"
             android:screenOrientation="portrait"/>
 
         <activity
-            android:name="org.tensorflow.demo.DetectorActivity" >
+            android:name="org.tensorflow.demo.recognition.DetectorActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
