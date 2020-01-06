@@ -279,10 +279,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 result.setLocation(location);
                 mappedRecognitions.add(result);
 
-                if(!result.getTitle().equals(currentSign)){
-                  currentSign = result.getTitle();
-                  SendDataToRest((float)sharedLocation.getLatitude(), (float)sharedLocation.getLongitude(), currentSign);
-                }
+                  SendDataToRest((float)sharedLocation.getLatitude(), (float)sharedLocation.getLongitude(), result.getTitle());
 
                 Log.println(Log.ERROR, "DETECTINA", "detectina");
               }

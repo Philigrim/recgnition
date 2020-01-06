@@ -181,13 +181,18 @@ public class MapActivity extends AppCompatActivity implements
 
         for (Sign sign : signList) {
             if (group == sign.getGroup()) {
-                data += sign.getSign_name() + ";";
+                if(!data.contains(sign.getSign_name())){
+                    data += sign.getSign_name() + ";";
+                }
                 latitude = sign.getPoint().getY();
                 longitude = sign.getPoint().getX();
             } else {
                 CreateSymbol(latitude, longitude, data);
 
-                data = sign.getSign_name() + ";";
+                if(!data.contains(sign.getSign_name())){
+                    data += sign.getSign_name() + ";";
+                }
+
                 group = sign.getGroup();
                 latitude = sign.getPoint().getY();
                 longitude = sign.getPoint().getX();
@@ -210,6 +215,8 @@ public class MapActivity extends AppCompatActivity implements
                             .withLatLng(new LatLng(lat, lng))
                             .withIconImage(MARKER)
                             .withIconSize(0.8f));
+
+        Log.println(Log.ERROR, "DATA: ", d);
 
         symbolToData.put(symbol, d);
     }
