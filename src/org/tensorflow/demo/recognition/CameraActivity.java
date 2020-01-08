@@ -53,7 +53,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import java.nio.ByteBuffer;
 
 import org.tensorflow.demo.map.MapActivity;
-import org.tensorflow.demo.Record.RecordActivity;
+import org.tensorflow.demo.record.RecordActivity;
 import org.tensorflow.demo.env.ImageUtils;
 import org.tensorflow.demo.env.Logger;
 import org.tensorflow.demo.R; // Explicit import needed for internal Google builds.
@@ -66,6 +66,7 @@ public abstract class CameraActivity extends AppCompatActivity
 
   private static final String PERMISSION_CAMERA = Manifest.permission.CAMERA;
   private static final String PERMISSION_STORAGE = Manifest.permission.WRITE_EXTERNAL_STORAGE;
+  private static final String PERMISSION_LOCATION = Manifest.permission.ACCESS_FINE_LOCATION;
 
   private boolean debug = false;
 
@@ -106,7 +107,7 @@ public abstract class CameraActivity extends AppCompatActivity
         if(location != null){
           sharedLocation = location;
         }else{
-          //Say something.
+          Toast.makeText(CameraActivity.this, "Location is not enabled", Toast.LENGTH_SHORT).show();
         }
       }
     });
@@ -140,20 +141,14 @@ public abstract class CameraActivity extends AppCompatActivity
     }
   }
 
-  Button.OnClickListener onToMapPressed = new Button.OnClickListener() {
-    @Override
-    public void onClick(View v) {
-      Intent intent = new Intent(getApplicationContext(), MapActivity.class);
-      startActivity(intent);
-    }
+  Button.OnClickListener onToMapPressed = v -> {
+    Intent intent = new Intent(getApplicationContext(), MapActivity.class);
+    startActivity(intent);
   };
 
-  Button.OnClickListener onToRecordPressed = new Button.OnClickListener() {
-    @Override
-    public void onClick(View v) {
-      Intent intent = new Intent(getApplicationContext(), RecordActivity.class);
-      startActivity(intent);
-    }
+  Button.OnClickListener onToRecordPressed = v -> {
+    Intent intent = new Intent(getApplicationContext(), RecordActivity.class);
+    startActivity(intent);
   };
 
   @Override
@@ -161,9 +156,6 @@ public abstract class CameraActivity extends AppCompatActivity
     LOGGER.d("onStart " + this);
     super.onStart();
   }
-
-
-  private byte[] lastPreviewFrame;
 
   protected int[] getRgbBytes() {
     imageConverter.run();
@@ -203,7 +195,6 @@ public abstract class CameraActivity extends AppCompatActivity
     }
 
     isProcessingFrame = true;
-    lastPreviewFrame = bytes;
     yuvBytes[0] = bytes;
     yRowStride = previewWidth;
 
@@ -348,7 +339,8 @@ public abstract class CameraActivity extends AppCompatActivity
     if (requestCode == PERMISSIONS_REQUEST) {
       if (grantResults.length > 0
           && grantResults[0] == PackageManager.PERMISSION_GRANTED
-          && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+          && grantResults[1] == PackageManager.PERMISSION_GRANTED
+          && grantResults[2] == PackageManager.PERMISSION_GRANTED) {
         setFragment();
       } else {
         requestPermission();
@@ -358,8 +350,9 @@ public abstract class CameraActivity extends AppCompatActivity
 
   private boolean hasPermission() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-      return checkSelfPermission(PERMISSION_CAMERA) == PackageManager.PERMISSION_GRANTED &&
-          checkSelfPermission(PERMISSION_STORAGE) == PackageManager.PERMISSION_GRANTED;
+      return  checkSelfPermission(PERMISSION_CAMERA) == PackageManager.PERMISSION_GRANTED &&
+              checkSelfPermission(PERMISSION_STORAGE) == PackageManager.PERMISSION_GRANTED &&
+              checkCallingOrSelfPermission(PERMISSION_LOCATION) == PackageManager.PERMISSION_GRANTED;
     } else {
       return true;
     }
@@ -368,11 +361,12 @@ public abstract class CameraActivity extends AppCompatActivity
   private void requestPermission() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
       if (shouldShowRequestPermissionRationale(PERMISSION_CAMERA) ||
-          shouldShowRequestPermissionRationale(PERMISSION_STORAGE)) {
+          shouldShowRequestPermissionRationale(PERMISSION_STORAGE) ||
+          shouldShowRequestPermissionRationale(PERMISSION_LOCATION)) {
         Toast.makeText(CameraActivity.this,
             "Camera AND storage permission are required for this demo", Toast.LENGTH_LONG).show();
       }
-      requestPermissions(new String[] {PERMISSION_CAMERA, PERMISSION_STORAGE}, PERMISSIONS_REQUEST);
+      requestPermissions(new String[] {PERMISSION_CAMERA, PERMISSION_STORAGE, PERMISSION_LOCATION}, PERMISSIONS_REQUEST);
     }
   }
 

@@ -1,4 +1,4 @@
-package org.tensorflow.demo.Record;
+package org.tensorflow.demo.record;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;

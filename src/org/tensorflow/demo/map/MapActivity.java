@@ -12,15 +12,12 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.Volley;
 import com.mapbox.android.core.location.LocationEngine;
@@ -40,12 +37,10 @@ import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.mapbox.mapboxsdk.maps.Style;
-import com.mapbox.mapboxsdk.plugins.annotation.OnSymbolClickListener;
 import com.mapbox.mapboxsdk.plugins.annotation.Symbol;
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager;
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolOptions;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.tensorflow.demo.R;
@@ -120,12 +115,9 @@ public class MapActivity extends AppCompatActivity implements
         startActivity(intent);
     }
 
-    Button.OnClickListener onToCameraPressed = new Button.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            Intent intent = new Intent(getApplicationContext(), DetectorActivity.class);
-            startActivity(intent);
-        }
+    Button.OnClickListener onToCameraPressed = v -> {
+        Intent intent = new Intent(getApplicationContext(), DetectorActivity.class);
+        startActivity(intent);
     };
 
     @Override
@@ -133,22 +125,24 @@ public class MapActivity extends AppCompatActivity implements
         MapActivity.this.mapboxMap = mapboxMap;
 
         mapboxMap.setStyle(new Style.Builder().fromUri("mapbox://styles/mapbox/streets-v10"),
-                new Style.OnStyleLoaded() {
-                    @Override
-                    public void onStyleLoaded(@NonNull Style style) {
-                        enableLocationComponent(style);
-                        /* Image: An image is loaded. */
-                        style.addImage(MARKER, BitmapFactory.decodeResource(
-                                MapActivity.this.getResources(), R.drawable.mapbox_marker_icon_default));
-                        style.addImage(SECOND_MARKER, BitmapFactory.decodeResource(
-                                MapActivity.this.getResources(), R.drawable.selected_marker));
-                        sm = new SymbolManager(mapView, mapboxMap, style);
-                        sm.setIconAllowOverlap(true);
-                        sm.setIconIgnorePlacement(true);
-                        FillDrawableHashMap();
-                        GetDataFromRest(style);
-                    }
+                style -> {
+                    enableLocationComponent(style);
+                    SetupStyleAndSymbolManager(style);
+                    FillDrawableHashMap();
+                    GetDataFromRest();
                 });
+    }
+
+    private void SetupStyleAndSymbolManager(Style s){
+        s.addImage(MARKER, BitmapFactory.decodeResource(
+                MapActivity.this.getResources(), R.drawable.mapbox_marker_icon_default));
+
+        s.addImage(SECOND_MARKER, BitmapFactory.decodeResource(
+                MapActivity.this.getResources(), R.drawable.selected_marker));
+
+        sm = new SymbolManager(mapView, mapboxMap, s);
+        sm.setIconAllowOverlap(true);
+        sm.setIconIgnorePlacement(true);
     }
 
     private void FillDrawableHashMap(){
@@ -162,14 +156,18 @@ public class MapActivity extends AppCompatActivity implements
             Log.println(Log.ERROR, "FINDFILEERROR", e.toString());
         }
 
-        for (String file : files) {
-            fileName = file.substring(0, file.indexOf('.'));
-            try{
-                Drawable d = new BitmapDrawable(MapActivity.this.getResources(), BitmapFactory.decodeStream(am.open("icon_images/" + file)));
-                signNameToSignDrawable.put(fileName, d);
-            }catch(IOException e) {
-                Log.println(Log.ERROR, "FILLDRAWABLEERROR", e.toString());
+        if(files != null){
+            for (String file : files) {
+                fileName = file.substring(0, file.indexOf('.'));
+                try{
+                    Drawable d = new BitmapDrawable(MapActivity.this.getResources(), BitmapFactory.decodeStream(am.open("icon_images/" + file)));
+                    signNameToSignDrawable.put(fileName, d);
+                }catch(IOException e) {
+                    Log.println(Log.ERROR, "FILLDRAWABLEERROR", e.toString());
+                }
             }
+        }else{
+            Log.e("READ FILE ERROR", "icon_images directory is empty");
         }
     }
 
@@ -189,9 +187,8 @@ public class MapActivity extends AppCompatActivity implements
             } else {
                 CreateSymbol(latitude, longitude, data);
 
-                if(!data.contains(sign.getSign_name())){
-                    data += sign.getSign_name() + ";";
-                }
+                data = sign.getSign_name() + ";";
+
 
                 group = sign.getGroup();
                 latitude = sign.getPoint().getY();
@@ -201,13 +198,7 @@ public class MapActivity extends AppCompatActivity implements
 
         CreateSymbol(signList.get(signList.size() - 1).getPoint().y, signList.get(signList.size() - 1).getPoint().x, data);
 
-        sm.addClickListener(new OnSymbolClickListener() {
-            @Override
-            public void onAnnotationClick(Symbol symbol) {
-                ShowSigns(symbol);
-                Log.println(Log.ERROR, "TEMPAS: ", tempSymbol + " ");
-            }
-        });
+        sm.addClickListener(this::ShowSigns);
     }
 
     private void CreateSymbol(double lat, double lng, String d){
@@ -231,12 +222,7 @@ public class MapActivity extends AppCompatActivity implements
             tempSymbol = null;
         }else{
             if(tempSymbol != null){
-                String data = symbolToData.remove(tempSymbol);
-                tempSymbol.setIconImage(MARKER);
-                tempSymbol.setIconOffset(new PointF(0f, 0f));
-                symbolToData.put(tempSymbol, data);
-                sm.update(tempSymbol);
-                tempSymbol = null;
+                ResetSymbolIcon();
             }
 
             sm.update(SwapSymbolIcon(SECOND_MARKER, s, 0f, -12.5f));
@@ -258,6 +244,19 @@ public class MapActivity extends AppCompatActivity implements
                 }
             }
         }
+    }
+
+    private void ResetSymbolIcon(){
+        String data = symbolToData.remove(tempSymbol);
+
+        tempSymbol.setIconImage(MARKER);
+        tempSymbol.setIconOffset(new PointF(0f, 0f));
+
+        symbolToData.put(tempSymbol, data);
+
+        sm.update(tempSymbol);
+
+        tempSymbol = null;
     }
 
     private Symbol SwapSymbolIcon(String iconName, Symbol s, float x, float y){
@@ -337,57 +336,49 @@ public class MapActivity extends AppCompatActivity implements
         }
     }
 
-    private void GetDataFromRest(Style s){
+    private void GetDataFromRest(){
         JsonArrayRequest arrayRequest = new JsonArrayRequest(
                 Request.Method.GET,
                 getURL,
                 null,
-                new Response.Listener<JSONArray>(){
-                    @Override
-                    public void onResponse(JSONArray response){
-                        Log.e("REST SUCCESS", response.toString());
+                response -> {
+                    Log.e("REST SUCCESS", response.toString());
 
-                        JSONObject object;
-                        if(response.length() > 0){
-                            try{
-                                Point point = new Point();
-                                for(int i = 0; i < response.length(); i++){
-                                    object = response.getJSONObject(i);
+                    JSONObject object;
+                    if(response.length() > 0){
+                        try{
+                            Point point = new Point();
+                            for(int i = 0; i < response.length(); i++){
+                                object = response.getJSONObject(i);
 
-                                    try{
-                                        point = new Point(object.getString("st_astext"));
-                                    }catch(SQLException e){
-                                        Log.e("POINTAS", e.toString());
-                                    }
-
-                                    Sign sign = new Sign(object.getInt("kat_id"),
-                                            object.getInt("zen_id"),
-                                            object.getString("zen_pav"),
-                                            point,
-                                            object.getInt("grupe_atvaizdavimui"));
-
-                                    signList.add(sign);
+                                try{
+                                    point = new Point(object.getString("st_astext"));
+                                }catch(SQLException e){
+                                    Log.e("POINTAS", e.toString());
                                 }
 
-                                Collections.sort(signList);
+                                Sign sign = new Sign(object.getInt("kat_id"),
+                                        object.getInt("zen_id"),
+                                        object.getString("zen_pav"),
+                                        point,
+                                        object.getInt("grupe_atvaizdavimui"));
 
-                                addMarkers();
-
-                                cancelAllRequests("getRequest");
-
-                            }catch(JSONException e){
-                                Log.e("JSON ERROR", e.toString());
+                                signList.add(sign);
                             }
+
+                            Collections.sort(signList);
+
+                            addMarkers();
+
+                            cancelAllRequests("getRequest");
+
+                        }catch(JSONException e){
+                            Log.e("JSON ERROR", e.toString());
                         }
                     }
                 },
 
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.e("GET ERROR", error.toString());
-                    }
-                });
+                error -> Log.e("GET ERROR", error.toString()));
 
         addToRequestQueue(arrayRequest, "getRequest");
     }

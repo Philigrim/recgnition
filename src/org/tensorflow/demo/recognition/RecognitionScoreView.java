@@ -33,7 +33,6 @@ public class RecognitionScoreView extends View {
   private final float textSizePx;
   private final Paint fgPaint;
   private final Paint bgPaint;
-  private MapActivity mapActivity;
 
   public RecognitionScoreView(final Context context, final AttributeSet set) {
     super(context, set);

@@ -1,4 +1,4 @@
-package org.tensorflow.demo.Record;
+package org.tensorflow.demo.record;
 
 public class Location extends android.location.Location {
 

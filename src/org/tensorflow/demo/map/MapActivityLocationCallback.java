@@ -37,7 +37,6 @@ public class MapActivityLocationCallback
                 return;
             }
 
-// Pass the new location to the Maps SDK's LocationComponent
             if (activity.mapboxMap != null && result.getLastLocation() != null) {
                 activity.mapboxMap.getLocationComponent().forceLocationUpdate(result.getLastLocation());
             }
@@ -52,7 +51,7 @@ public class MapActivityLocationCallback
 
     @Override
     public void onFailure(@NonNull Exception exception) {
-        Log.d("LocationChangeActivity", exception.getLocalizedMessage());
+        Log.d("LocationChangeActivity", exception.getLocalizedMessage() + "");
         MapActivity activity = activityWeakReference.get();
         if (activity != null) {
             Toast.makeText(activity, exception.getLocalizedMessage(),

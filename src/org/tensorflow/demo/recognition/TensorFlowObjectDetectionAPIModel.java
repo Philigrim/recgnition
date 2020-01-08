@@ -174,13 +174,10 @@ public class TensorFlowObjectDetectionAPIModel implements Classifier {
     final PriorityQueue<Recognition> pq =
         new PriorityQueue<Recognition>(
             1,
-            new Comparator<Recognition>() {
-              @Override
-              public int compare(final Recognition lhs, final Recognition rhs) {
-                // Intentionally reversed to put high confidence at the head of the queue.
-                return Float.compare(rhs.getConfidence(), lhs.getConfidence());
-              }
-            });
+                (lhs, rhs) -> {
+                  // Intentionally reversed to put high confidence at the head of the queue.
+                  return Float.compare(rhs.getConfidence(), lhs.getConfidence());
+                });
 
     // Scale them back to the input size.
     for (int i = 0; i < outputScores.length; ++i) {

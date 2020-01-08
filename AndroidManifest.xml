@@ -38,7 +38,7 @@
             android:screenOrientation="portrait"/>
 
         <activity
-            android:name=".Record.RecordActivity"
+            android:name=".record.RecordActivity"
             android:label="Zenklu valdovai"
             android:screenOrientation="portrait"/>
 

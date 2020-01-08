@@ -1,4 +1,4 @@
-package org.tensorflow.demo.Record;
+package org.tensorflow.demo.record;
 
 import android.content.Context;
 import android.hardware.Camera;

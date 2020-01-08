@@ -279,7 +279,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 result.setLocation(location);
                 mappedRecognitions.add(result);
 
-                  SendDataToRest((float)sharedLocation.getLatitude(), (float)sharedLocation.getLongitude(), result.getTitle());
+                SendDataToRest((float)sharedLocation.getLatitude(), (float)sharedLocation.getLongitude(), result.getTitle());
 
                 Log.println(Log.ERROR, "DETECTINA", "detectina");
               }
@@ -295,45 +295,46 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   }
 
   private void SendDataToRest(float latitude, float longitude, String signName){
-        JSONObject postparams = new JSONObject();
-
-        Point point = new Point(longitude, latitude);
-
-        String requestTag = "requestTag" + signName;
-
-        Geometry geometry = point;
+        Geometry geometry = new Point(longitude, latitude);
 
         Date currentTime = Calendar.getInstance().getTime();
 
         geometry.setSrid(srid);
 
-        try{
-          postparams.put("zen_id", signHashMap.get(signName));
-          postparams.put("grupes_id", null);
-          postparams.put("koordinate", geometry);
-          postparams.put("laikozyma", currentTime);
-          postparams.put("var_id", null);
-        }catch(JSONException j){
-          Log.e("JSON ERROR", j.toString());
-        }
+        PostRequest(signName, geometry, currentTime);
+  }
 
-        JsonObjectRequest jsonObjReq = new JsonObjectRequest(Request.Method.POST,
-                postURL, postparams, new Response.Listener<JSONObject>() {
+  private void PostRequest(String sn, Geometry g, Date ct){
+      JSONObject postparams = new JSONObject();
+      String requestTag = "requestTag" + sn;
+
+      try{
+          postparams.put("zen_id", signHashMap.get(sn));
+          postparams.put("grupes_id", null);
+          postparams.put("koordinate", g);
+          postparams.put("laikozyma", ct);
+          postparams.put("var_id", null);
+      }catch(JSONException j){
+          Log.e("JSON ERROR", j.toString());
+      }
+
+      JsonObjectRequest jsonObjReq = new JsonObjectRequest(Request.Method.POST,
+              postURL, postparams, new Response.Listener<JSONObject>() {
           @Override
           public void onResponse(JSONObject response) {
-            Log.println(Log.INFO, "POST SUCCESS", response.toString());
-            //cancelAllRequests(requestTag);
+              Log.println(Log.INFO, "POST SUCCESS", response.toString());
+              cancelAllRequests(requestTag);
           }
-        },
-          new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-              Log.println(Log.ERROR, "POST FAIL", error.toString());
-              //cancelAllRequests(requestTag);
-            }
-          });
+      },
+              new Response.ErrorListener() {
+                  @Override
+                  public void onErrorResponse(VolleyError error) {
+                      Log.println(Log.ERROR, "POST FAIL", error.toString());
+                      cancelAllRequests(requestTag);
+                  }
+              });
 
-        addToRequestQueue(jsonObjReq, requestTag);
+      addToRequestQueue(jsonObjReq, requestTag);
   }
 
   public RequestQueue getRequestQueue() {
