@@ -26,9 +26,6 @@ public class MyCameraSurfaceView extends SurfaceView implements SurfaceHolder.Ca
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int weight, int height) {
-        // If your preview can change or rotate, take care of those events here.
-        // Make sure to stop the preview before resizing or reformatting it.
-
         mCamera.setDisplayOrientation(90); //preview before recording
         if (mHolder.getSurface() == null){
             // preview surface does not exist
@@ -41,8 +38,6 @@ public class MyCameraSurfaceView extends SurfaceView implements SurfaceHolder.Ca
         } catch (Exception e){
             // ignore: tried to stop a non-existent preview
         }
-
-        // make any resize, rotate or reformatting changes here
 
         // start preview with new settings
         try {
