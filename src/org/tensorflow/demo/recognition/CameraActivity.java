@@ -67,6 +67,7 @@ public abstract class CameraActivity extends AppCompatActivity
   private static final String PERMISSION_CAMERA = Manifest.permission.CAMERA;
   private static final String PERMISSION_STORAGE = Manifest.permission.WRITE_EXTERNAL_STORAGE;
   private static final String PERMISSION_LOCATION = Manifest.permission.ACCESS_FINE_LOCATION;
+  private static final String PERMISSION_AUDIO = Manifest.permission.RECORD_AUDIO;
 
   private boolean debug = false;
 
@@ -340,7 +341,8 @@ public abstract class CameraActivity extends AppCompatActivity
       if (grantResults.length > 0
           && grantResults[0] == PackageManager.PERMISSION_GRANTED
           && grantResults[1] == PackageManager.PERMISSION_GRANTED
-          && grantResults[2] == PackageManager.PERMISSION_GRANTED) {
+          && grantResults[2] == PackageManager.PERMISSION_GRANTED
+          && grantResults[3] == PackageManager.PERMISSION_GRANTED) {
         setFragment();
       } else {
         requestPermission();
@@ -352,7 +354,8 @@ public abstract class CameraActivity extends AppCompatActivity
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
       return  checkSelfPermission(PERMISSION_CAMERA) == PackageManager.PERMISSION_GRANTED &&
               checkSelfPermission(PERMISSION_STORAGE) == PackageManager.PERMISSION_GRANTED &&
-              checkCallingOrSelfPermission(PERMISSION_LOCATION) == PackageManager.PERMISSION_GRANTED;
+              checkSelfPermission(PERMISSION_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+              checkSelfPermission(PERMISSION_AUDIO) == PackageManager.PERMISSION_GRANTED;
     } else {
       return true;
     }
@@ -362,11 +365,12 @@ public abstract class CameraActivity extends AppCompatActivity
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
       if (shouldShowRequestPermissionRationale(PERMISSION_CAMERA) ||
           shouldShowRequestPermissionRationale(PERMISSION_STORAGE) ||
-          shouldShowRequestPermissionRationale(PERMISSION_LOCATION)) {
+          shouldShowRequestPermissionRationale(PERMISSION_LOCATION) ||
+          shouldShowRequestPermissionRationale(PERMISSION_AUDIO)) {
         Toast.makeText(CameraActivity.this,
             "Camera AND storage permission are required for this demo", Toast.LENGTH_LONG).show();
       }
-      requestPermissions(new String[] {PERMISSION_CAMERA, PERMISSION_STORAGE, PERMISSION_LOCATION}, PERMISSIONS_REQUEST);
+      requestPermissions(new String[] {PERMISSION_CAMERA, PERMISSION_STORAGE, PERMISSION_LOCATION, PERMISSION_AUDIO}, PERMISSIONS_REQUEST);
     }
   }
 

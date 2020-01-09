@@ -24,6 +24,7 @@ import android.graphics.Paint.Cap;
 import android.graphics.Paint.Join;
 import android.graphics.Paint.Style;
 import android.graphics.RectF;
+import android.os.Handler;
 import android.text.TextUtils;
 import android.util.Pair;
 import android.util.TypedValue;
@@ -266,6 +267,9 @@ public class MultiBoxTracker {
 
     if (rectsToTrack.isEmpty()) {
       logger.v("Nothing to track, aborting.");
+      if(!trackedObjects.isEmpty()){
+        trackedObjects.clear();
+      }
       return;
     }
 

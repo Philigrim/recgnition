@@ -109,6 +109,10 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
   private HashMap<String, String> signHashMap = Sign.SignNameIdHashMap();
 
+  Classifier.Recognition lastResult = null;
+
+  Paint paint = new Paint();
+
   @Override
   public void onPreviewSizeChosen(final Size size, final int rotation) {
     final float textSizePx =
@@ -267,7 +271,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             for (final Classifier.Recognition result : results) {
               final RectF location = result.getLocation();
               if (location != null && result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API) {
-                canvas.drawRect(location, paint);
+                lastResult = result;
+                //canvas.drawRect(location, paint);
 
                 cropToFrameTransform.mapRect(location);
                 result.setLocation(location);
@@ -276,6 +281,12 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 SendDataToRest((float)sharedLocation.getLatitude(), (float)sharedLocation.getLongitude(), result.getTitle());
               }
             }
+
+
+//            if(lastResult != null){
+//              paint.setAlpha(0);
+//              canvas.drawRect(lastResult.getLocation(), paint);
+//            }
 
             tracker.trackResults(mappedRecognitions, luminanceCopy, currTimestamp);
             trackingOverlay.postInvalidate();
