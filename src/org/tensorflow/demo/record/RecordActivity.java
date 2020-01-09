@@ -63,7 +63,7 @@ public class RecordActivity extends Activity implements LocationListener {
             requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1000);
         }else {
             //start the program if the permission is granted
-            doStuff();
+            getLocationService();
         }
 
         speed = findViewById(R.id.speed);
@@ -74,10 +74,6 @@ public class RecordActivity extends Activity implements LocationListener {
         durationChronometer = (Chronometer) findViewById(R.id.duration);
 
         dateAndTimeFormat = new SimpleDateFormat("yyyy-MM-dd   HH:mm:ss");
-
-
-
-
 
         //Get Camera for preview
         myCamera = getCameraInstance();
@@ -126,7 +122,7 @@ public class RecordActivity extends Activity implements LocationListener {
                     durationChronometer.start();
 
                     //Release Camera before MediaRecorder start
-
+                    releaseCamera();
                     if(!prepareMediaRecorder()){
                         Toast.makeText(getApplicationContext(), "Fail in prepareMediaRecorder()!\n - Ended -", Toast.LENGTH_LONG).show();
                         finish();
@@ -173,12 +169,7 @@ public class RecordActivity extends Activity implements LocationListener {
 
     private Camera getCameraInstance(){
         Camera c = null;
-        try {
-            c = Camera.open(); // attempt to get a Camera instance
-        }
-        catch (Exception e){
-            // Camera is not available (in use or does not exist)
-        }
+        c = Camera.open(); // attempt to get a Camera instance
         return c; // returns null if camera is unavailable
     }
 
@@ -191,27 +182,18 @@ public class RecordActivity extends Activity implements LocationListener {
 
 
     private boolean prepareMediaRecorder(){
+        myCamera = getCameraInstance();
         myCamera.setDisplayOrientation(90); // preview while recording
-        
         mediaRecorder = new MediaRecorder();
-
         myCamera.unlock();
         mediaRecorder.setCamera(myCamera);
-
         mediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
         mediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
-
         mediaRecorder.setOrientationHint(90); // file rotation
-
         mediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH));
-
-
-
         mediaRecorder.setOutputFile(Environment.getExternalStorageDirectory() + "/" + Environment.DIRECTORY_DCIM + "/Camera/" + getFileName_CustomFormat() + ".mp4");
-        //mediaRecorder.setOutputFile("/sdcard/myvideo1.mp4");
         mediaRecorder.setMaxDuration(86400000); // Set max duration 24 h.
         mediaRecorder.setMaxFileSize(2000000000); // Set max file size 2GB
-
         mediaRecorder.setPreviewDisplay(myCameraSurfaceView.getHolder().getSurface());
 
         try {
@@ -250,9 +232,6 @@ public class RecordActivity extends Activity implements LocationListener {
         }
     }
 
-
-
-
     /////////////// implements  LOCATION LISTENER
 
     @Override
@@ -262,7 +241,6 @@ public class RecordActivity extends Activity implements LocationListener {
             this.updateSpeed(myLocation);
         }
     }
-
 
     @Override
     public void onStatusChanged(String provider, int status, Bundle extras){
@@ -277,7 +255,7 @@ public class RecordActivity extends Activity implements LocationListener {
     }
 
     @SuppressLint("MissingPermission")
-    private void doStuff() {
+    private void getLocationService() {
         LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         if(locationManager != null) {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
@@ -304,7 +282,7 @@ public class RecordActivity extends Activity implements LocationListener {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if(requestCode == 1000) {
             if(grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                doStuff();
+                getLocationService();
             } else {
                 finish();
             }
