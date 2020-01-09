@@ -25,6 +25,7 @@ import android.graphics.Paint;
 import android.graphics.Paint.Style;
 import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.location.Location;
 import android.media.ImageReader.OnImageAvailableListener;
 import android.os.SystemClock;
 import android.util.Log;
@@ -38,6 +39,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.location.LocationListener;
 
 import java.io.IOException;
 import java.util.Calendar;
@@ -108,10 +110,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private RequestQueue requestQueue;
 
   private HashMap<String, String> signHashMap = Sign.SignNameIdHashMap();
-
-  Classifier.Recognition lastResult = null;
-
-  Paint paint = new Paint();
 
   @Override
   public void onPreviewSizeChosen(final Size size, final int rotation) {
@@ -271,22 +269,17 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             for (final Classifier.Recognition result : results) {
               final RectF location = result.getLocation();
               if (location != null && result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API) {
-                lastResult = result;
-                //canvas.drawRect(location, paint);
+                canvas.drawRect(location, paint);
 
                 cropToFrameTransform.mapRect(location);
                 result.setLocation(location);
                 mappedRecognitions.add(result);
 
-                SendDataToRest((float)sharedLocation.getLatitude(), (float)sharedLocation.getLongitude(), result.getTitle());
+                if(sharedLocation != null){
+                  SendDataToRest((float)sharedLocation.getLatitude(), (float)sharedLocation.getLongitude(), result.getTitle());
+                }
               }
             }
-
-
-//            if(lastResult != null){
-//              paint.setAlpha(0);
-//              canvas.drawRect(lastResult.getLocation(), paint);
-//            }
 
             tracker.trackResults(mappedRecognitions, luminanceCopy, currTimestamp);
             trackingOverlay.postInvalidate();
