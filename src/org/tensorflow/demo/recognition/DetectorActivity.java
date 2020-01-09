@@ -105,15 +105,9 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
   private BorderedText borderedText;
 
-  private String currentSign = "";
-
   private RequestQueue requestQueue;
 
   private HashMap<String, String> signHashMap = Sign.SignNameIdHashMap();
-
-  private String postURL = "http://193.219.91.103:9560/zenklu_log";
-
-  private int srid = 4326;
 
   @Override
   public void onPreviewSizeChosen(final Size size, final int rotation) {
@@ -280,8 +274,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 mappedRecognitions.add(result);
 
                 SendDataToRest((float)sharedLocation.getLatitude(), (float)sharedLocation.getLongitude(), result.getTitle());
-
-                Log.println(Log.ERROR, "DETECTINA", "detectina");
               }
             }
 
@@ -299,7 +291,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
         Date currentTime = Calendar.getInstance().getTime();
 
-        geometry.setSrid(srid);
+    int srid = 4326;
+    geometry.setSrid(srid);
 
         PostRequest(signName, geometry, currentTime);
   }
@@ -318,8 +311,9 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
           Log.e("JSON ERROR", j.toString());
       }
 
-      JsonObjectRequest jsonObjReq = new JsonObjectRequest(Request.Method.POST,
-              postURL, postparams, new Response.Listener<JSONObject>() {
+    String postURL = "http://193.219.91.103:9560/zenklu_log";
+    JsonObjectRequest jsonObjReq = new JsonObjectRequest(Request.Method.POST,
+            postURL, postparams, new Response.Listener<JSONObject>() {
           @Override
           public void onResponse(JSONObject response) {
               Log.println(Log.INFO, "POST SUCCESS", response.toString());
